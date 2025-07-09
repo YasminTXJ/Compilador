@@ -2,6 +2,7 @@ principal(){cccc
  inteiro !a, !b2 = 7;
  inteiro !d;
  escreva("Escreva um número ");
+ 6
  leia (!a);
  !d = __soma (!a, !b2)
 }
