@@ -7,7 +7,7 @@ inteiro !a, !b2 = 7;
  leia (!a);
 se (!a <= !b2)
  escreva(" A é maior", !a);
- senao escreva("B é maior", a);
+ senao escreva("B é maior", !a);
  para (!d = 1; !d<=100; !d=!d+2){
  escreva("D", !d);
  }
