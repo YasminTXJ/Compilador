@@ -1,5 +1,5 @@
 principal(){
-inteiro !a, !b2 = 7;
+inteiro !a , !b2 = 7;
  decimal !cc[2.5];
  inteiro !d;
  !b2 = !a;

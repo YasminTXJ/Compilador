@@ -8,149 +8,93 @@
 #define KB 1024
 #define DEFAULT_MEMORY_LIMIT (2048 * KB)
 
+// Prototipação
+// Transforma Arquivo txt em Tokens
+char **tokenizeFile(const char *filename, int *num_tokens_ret);
+void tokenizeLine(const char *line, int num_linha);
+int verificaAsciiValido(char c);
+void addToken(const char *token);
+
+void *verificaSeTemMemoriaDisponivelEFazOMalloc(size_t size);
+void LiberaMallocELiberaMemoria(void *ptr, size_t size);
+
+int VerificaSintaxeEhValida(char **tokens, int numTokens);
+int ehPalavraReservada(const char *token);
+int ehTipoDeDado(const char *token);
+int ehFuncao(const char *token);
+int ehVariavel(const char *token);
+int VerificaSeNomeDeVariavelEhValido(const char *token);
+int ehNumero(const char *token);
+int ehOperador(const char *token);
+int ehMarcador(const char *token);
+int ehString(const char *token);
+
+char *safe_strdup(const char *s);
+
 // Variáveis globais de memória
 size_t total_memory_used = 0;
 size_t max_memory_used = 0;
 size_t memory_limit = DEFAULT_MEMORY_LIMIT;
 
-// Alocação de memória com controle
-void *safe_malloc(size_t size) {
-  if (total_memory_used + size > memory_limit) {
-    fprintf(stderr, "ERRO: Memória Insuficiente\n");
-    exit(EXIT_FAILURE);
-  }
-
-  void *ptr = malloc(size);
-  if (!ptr) {
-    fprintf(stderr, "ERRO: Falha na alocação\n");
-    exit(EXIT_FAILURE);
-  }
-
-  total_memory_used += size;
-  if (total_memory_used > max_memory_used) {
-    max_memory_used = total_memory_used;
-  }
-
-  return ptr;
-}
-
-void safe_free(void *ptr, size_t size) {
-  if (ptr) {
-    free(ptr);
-    if (total_memory_used >= size) {
-      total_memory_used -= size;
-    }
-  }
-  if (ptr == NULL) {
-    if (total_memory_used >= size) {
-      total_memory_used -= size;
-    }
-  }
-}
-
-char *safe_strdup(const char *s) {
-  size_t size = strlen(s) + 1;
-  char *dup = safe_malloc(size);
-  strcpy(dup, s);
-  return dup;
-}
-
-// Tokens fixos
-const char *keywords[] = {"principal", "funcao", "retorno", "leia",
-                          "escreva",   "se",     "senao",   "para"};
-const char *tipos[] = {"inteiro", "texto", "decimal"};
+// Tokens fixos (constantes literais — não precisam de malloc)
+const char *palavrasReservadas[] = {"principal", "funcao", "retorno", "leia",
+                                    "escreva",   "se",     "senao",   "para"};
+const char *tiposDeDados[] = {"inteiro", "texto", "decimal"};
 const char *operadores[] = {"==", "<>", "<=", ">=", "&&", "||", "+",
                             "-",  "*",  "/",  "^",  "<",  ">",  "="};
 const char *marcadores[] = {"(", ")", "{", "}", "[", "]", ";", ",", " "};
-
-// Verificações
-int isKeyword(const char *token) {
-  for (int i = 0; i < sizeof(keywords) / sizeof(keywords[0]); i++) {
-    if (strcmp(token, keywords[i]) == 0)
-      return 1;
-  }
-  return 0;
-}
-
-int isTipo(const char *token) {
-  for (int i = 0; i < sizeof(tipos) / sizeof(tipos[0]); i++) {
-    if (strcmp(token, tipos[i]) == 0)
-      return 1;
-  }
-  return 0;
-}
-
-int isOperador(const char *token) {
-  for (int i = 0; i < sizeof(operadores) / sizeof(operadores[0]); i++) {
-    if (strcmp(token, operadores[i]) == 0)
-      return 1;
-  }
-  return 0;
-}
-
-int isMarcador(const char *token) {
-  for (int i = 0; i < sizeof(marcadores) / sizeof(marcadores[0]); i++) {
-    if (strcmp(token, marcadores[i]) == 0)
-      return 1;
-  }
-  return 0;
-}
-
-int isVariavel(const char *token) {
-  return token[0] == '!' && islower(token[1]);
-}
-
-int isFuncao(const char *token) {
-  return strncmp(token, "__", 2) == 0 &&
-         (isalpha(token[2]) || isdigit(token[2]));
-}
-
-int isNumero(const char *token) {
-  safe_malloc(sizeof(int));
-  int ponto = 0;
-  for (int i = 0; token[i]; i++) {
-    if (token[i] == '.')
-      ponto++;
-    else if (!isdigit(token[i]))
-      return 0;
-  }
-  safe_free(NULL, sizeof(int));
-  return ponto <= 1;
-}
-
-int verificaAsciiValido(char c) { return (c >= 0 && c <= 127); }
-
-int nomeDaVariavelEhValida(const char *token) {
-  for (int i = 2; token[i] != '\0'; i++) {
-    if (!((token[i] >= 'a' && token[i] <= 'z') ||
-          (token[i] >= 'A' && token[i] <= 'Z') ||
-          (token[i] >= '0' && token[i] <= '9'))) {
-
-      return 0;
-    }
-  }
-  return 1;
-}
 
 // Vetor dinâmico de tokens
 char **tokens = NULL;
 int tokenCount = 0;
 
-void addToken(const char *token) {
-  if (strlen(token) == 0)
-    return;
-  safe_malloc(sizeof(char *)); // Realoca o vetor de tokens para comportar mais
-                               // um ponteiro (mais um token).
-  tokens = realloc(
-      tokens, (tokenCount + 1) *
-                  sizeof(char *)); // realoca o vetor para acomodar o novo token
-  tokens[tokenCount] =
-      safe_strdup(token); // Duplica a string `token` usando `safe_strdup` (que
-                          // aloca memória e copia a string original).
-  tokenCount++;
+int main() {
+  int numTokens;
+  char **resultado = tokenizeFile("Codigo1.txt", &numTokens);
+
+  if (VerificaSintaxeEhValida(resultado, numTokens)) {
+    printf("-={********************************************************}=-\n");
+    printf("\t\tCodigo Compilado com Sucesso\n");
+    printf("-={********************************************************}=-\n");
+  }
+
+  printf("\nInformacoes\nTokens encontrados: %d\n", numTokens);
+  for (int i = 0; i < numTokens; i++) {
+    printf("Token[%d]: %s\n", i, resultado[i]);
+    LiberaMallocELiberaMemoria(resultado[i], strlen(resultado[i]) + 1);
+    
+  }
+  LiberaMallocELiberaMemoria(resultado, numTokens * sizeof(char *));
+
+  printf("\n[MEMORIA]\n");
+  printf("Maximo de memoria usada: %.2f KB\n", (float)max_memory_used / KB);
+  printf("Memoria total usada: %.2f KB\n", (float)total_memory_used / KB);
+
+  return 0;
 }
 
-// Tokenização
+//******-------------------------------------------------**********************----------------------------------------------------
+//           Transforma Arquivo TXT em tokens
+//******-------------------------------------------------**********************----------------------------------------------------
+
+char **tokenizeFile(const char *filename, int *num_tokens_ret) {
+  FILE *file = fopen(filename, "r");
+  if (!file) {
+    perror("Erro ao abrir arquivo");
+    return NULL;
+  }
+
+  char line[1024];
+  int linha = 1;
+  while (fgets(line, sizeof(line), file)) {
+    tokenizeLine(line, linha++);
+  }
+
+  fclose(file);
+  *num_tokens_ret = tokenCount;
+  return tokens;
+}
+
 void tokenizeLine(const char *line, int num_linha) {
   char token[MAX_TOKEN_SIZE]; // Buffer  para montar tokens à medida que os
                               // caracteres são lidos.
@@ -158,14 +102,14 @@ void tokenizeLine(const char *line, int num_linha) {
   int i = 0, j = 0;       // i percorre a linha do arquivo, j percorre o token
   int len = strlen(line); // tamanho da linha
   int dentroDeString = 0;
-  safe_malloc(sizeof(i));
-  safe_malloc(sizeof(j));
-  safe_malloc(sizeof(len));
-  safe_malloc(sizeof(dentroDeString));
+  verificaSeTemMemoriaDisponivelEFazOMalloc(sizeof(i));
+  verificaSeTemMemoriaDisponivelEFazOMalloc(sizeof(j));
+  verificaSeTemMemoriaDisponivelEFazOMalloc(sizeof(len));
+  verificaSeTemMemoriaDisponivelEFazOMalloc(sizeof(dentroDeString));
 
   while (i < len) {
     char c = line[i];
-    safe_malloc(sizeof(c));
+    verificaSeTemMemoriaDisponivelEFazOMalloc(sizeof(c));
 
     if (c == '"')
       dentroDeString = !dentroDeString; // verifica se está entre aspas
@@ -265,91 +209,203 @@ void tokenizeLine(const char *line, int num_linha) {
       break;
     }
   }
-  safe_free(NULL, sizeof(int));
-  safe_free(NULL, sizeof(i));
-  safe_free(NULL, sizeof(j));
-  safe_free(NULL, sizeof(len));
-  safe_free(NULL, sizeof(dentroDeString));
+  LiberaMallocELiberaMemoria(NULL, sizeof(int));
+  LiberaMallocELiberaMemoria(NULL, sizeof(i));
+  LiberaMallocELiberaMemoria(NULL, sizeof(j));
+  LiberaMallocELiberaMemoria(NULL, sizeof(len));
+  LiberaMallocELiberaMemoria(NULL, sizeof(dentroDeString));
   token[j] = '\0'; // Finaliza o token atual
   addToken(token);
 }
 
-char **tokenizeFile(const char *filename, int *num_tokens_ret) {
-  FILE *file = fopen(filename, "r");
-  if (!file) {
-    perror("Erro ao abrir arquivo");
-    return NULL;
-  }
+int verificaAsciiValido(char c) { return (c >= 0 && c <= 127); }
 
-  char line[1024];
-  int linha = 1;
-  while (fgets(line, sizeof(line), file)) {
-    tokenizeLine(line, linha++);
-  }
-
-  fclose(file);
-  *num_tokens_ret = tokenCount;
-  return tokens;
+void addToken(const char *token) {
+  if (strlen(token) == 0)
+    return;
+  verificaSeTemMemoriaDisponivelEFazOMalloc(
+      sizeof(char *)); // Realoca o vetor de tokens para comportar mais
+                       // um ponteiro (mais um token).
+  tokens = realloc(
+      tokens, (tokenCount + 1) *
+                  sizeof(char *)); // realoca o vetor para acomodar o novo token
+  tokens[tokenCount] =
+      safe_strdup(token); // Duplica a string `token` usando `safe_strdup` (que
+                          // aloca memória e copia a string original).
+  tokenCount++;
 }
 
-void classificaToken(char **tokens, int numTokens) {
+char *safe_strdup(const char *s) {
+  size_t size = strlen(s) + 1;
+  char *dup = verificaSeTemMemoriaDisponivelEFazOMalloc(size);
+  strcpy(dup, s);
+  return dup;
+}
+
+//******-------------------------------------------------**********************----------------------------------------------------
+//           Funcoes que fazem a verificacao de sintaxe
+//******-------------------------------------------------**********************----------------------------------------------------
+
+int VerificaSintaxeEhValida(char **tokens, int numTokens) {
   int linhaAtual = 1;
+
   for (int i = 0; i < numTokens; i++) {
     const char *token = tokens[i];
     if (!token || strlen(token) == 0)
       continue;
-
+    
+    printf("Analisando token : %s\n", token);   
     if (strcmp(token, ";") == 0)
       linhaAtual++;
 
-    if (isKeyword(token)) {
-      // printf("LINHA %d: %s - Palavra reservada\n", linhaAtual, token);
-    } else if (isTipo(token)) {
-    } else if (isFuncao(token)) {
-    } else if (isVariavel(token)) {
-      if (!nomeDaVariavelEhValida(token)) {
-        printf("LINHA %d: %s - Nome de variável inválido!\n", linhaAtual,
-               token);
-        break;
-      }
-    } else if (isNumero(token) ||
-               (token[0] == '"' && token[strlen(token) - 1] == '"')) {
-    } else if (isOperador(token)) {
-    } else if (isMarcador(token)) {
+    if (ehPalavraReservada(token)) {
+      printf("token %s palavra reservada\n", token);  
+    } else if (ehTipoDeDado(token)) {
+      printf("token %s tipo de dado\n", token);  
+    } else if (ehFuncao(token)) {
+      printf("token %s funcao\n", token);
+    } else if (ehVariavel(token)) {
+      printf("token %s variavel\n", token);  
+    } else if (ehNumero(token)) {
+      printf("token %s numero\n", token);  
+    } else if (ehString(token)) {
+      printf("token %s string\n", token);  
+    } else if (ehOperador(token)) {
+      printf("token %s operador\n", token);
+    } else if (ehMarcador(token)) {
     } else {
-      printf("LINHA %d: %s - ERRO: Token inválido\n", linhaAtual, token);
-      break;
+      printf("------------------------------------------------------\n");
+      printf("\tERRO: Sintaxe invalida ('%s')- LINHA %d \n", token, linhaAtual);
+      printf("------------------------------------------------------\n");
+      return 0;
     }
+
+   
+  }
+   return 1;
+}
+int ehPalavraReservada(const char *token) {
+  for (int i = 0;
+       i < sizeof(palavrasReservadas) / sizeof(palavrasReservadas[0]); i++) {
+    if (strcmp(token, palavrasReservadas[i]) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+int ehTipoDeDado(const char *token) {
+  for (int i = 0; i < sizeof(tiposDeDados) / sizeof(tiposDeDados[0]); i++) {
+    if (strcmp(token, tiposDeDados[i]) == 0)
+      return 1;
+  };
+  return 0;
+}
+int ehString(const char *token) {
+  if (token[0] == '"' && token[strlen(token) - 1] == '"') {
+    return 1;
+  } else {
+    return 0;
   }
 }
 
-int main() {
-  safe_malloc(sizeof(operadores));
-  safe_malloc(sizeof(keywords));
-  safe_malloc(sizeof(marcadores));
-  safe_malloc(sizeof(tipos));
-
-  int numTokens;
-  safe_malloc(sizeof(numTokens));
-  char **resultado = tokenizeFile("Codigo1.txt", &numTokens);
-
-  classificaToken(resultado, numTokens);
-
-  printf("Tokens encontrados: %d\n", numTokens);
-  for (int i = 0; i < numTokens; i++) {
-    printf("Token[%d]: %s\n", i, resultado[i]);
-    safe_free(resultado[i], strlen(resultado[i]) + 1);
+int ehFuncao(const char *token) {
+  if (strncmp(token, "__", 2) == 0 &&
+      VerificaSeNomeDeVariavelEhValido(token + 2)) {
+    return 1;
+  } else {
+    return 0;
   }
-  safe_free(resultado, tokenCount * sizeof(char *));
-  safe_free(NULL, sizeof(numTokens));
-  safe_free(NULL, sizeof(operadores));
-  safe_free(NULL, sizeof(keywords));
-  safe_free(NULL, sizeof(marcadores));
-  safe_free(NULL, sizeof(tipos));
+}
 
-  printf("\n[MEMÓRIA]\n");
-  printf("Máximo de memória usada: %.2f KB\n", (float)max_memory_used / KB);
-  printf("Memória total usada: %.2f KB\n", (float)total_memory_used / KB);
+int ehVariavel(const char *token) {
+  if (token[0] == '!' && islower(token[1])) {
+    if (strlen(token) > 2) {
+      if (VerificaSeNomeDeVariavelEhValido(token + 2)) {
+        return 1;
+      } else {
+        return 0;
+      }
+    } else {
+      return 1;
+    }
+  } else {
+    return 0;
+  }
+}
 
+int VerificaSeNomeDeVariavelEhValido(const char *token) {
+  for (int i = 0; token[i] != '\0'; i++) {
+    if (!isalpha(token[i]) && !isdigit(token[i])) {
+      return 0; // found something that is not a letter or digit
+    }
+  }
+  return 1;
+}
+
+int ehNumero(const char *token) {
+  verificaSeTemMemoriaDisponivelEFazOMalloc(sizeof(int));
+  int ponto = 0;
+  for (int i = 0; token[i]; i++) {
+    if (token[i] == '.')
+      ponto++;
+    else if (!isdigit(token[i]))
+      return 0;
+  }
+  LiberaMallocELiberaMemoria(NULL, sizeof(int));
+  return ponto <= 1;
+}
+
+int ehOperador(const char *token) {
+  for (int i = 0; i < sizeof(operadores) / sizeof(operadores[0]); i++) {
+    if (strcmp(token, operadores[i]) == 0) {
+      return 1;
+    };
+  }
   return 0;
+}
+
+int ehMarcador(const char *token) {
+  for (int i = 0; i < sizeof(marcadores) / sizeof(marcadores[0]); i++) {
+    if (strcmp(token, marcadores[i]) == 0)
+      return 1;
+  }
+  return 0;
+}
+
+//******-------------------------------------------------**********************----------------------------------------------------
+//           Funcoes que fazem o gerenciamento de memoria
+//******-------------------------------------------------**********************----------------------------------------------------
+
+void *verificaSeTemMemoriaDisponivelEFazOMalloc(size_t size) {
+  if (total_memory_used + size > memory_limit) {
+    fprintf(stderr, "ERRO: Memória Insuficiente\n");
+    exit(EXIT_FAILURE);
+  }
+
+  void *ptr = malloc(size);
+  if (!ptr) {
+    fprintf(stderr, "ERRO: Falha na alocação\n");
+    exit(EXIT_FAILURE);
+  }
+
+  total_memory_used += size;
+  if (total_memory_used > max_memory_used) {
+    max_memory_used = total_memory_used;
+  }
+
+  return ptr;
+}
+
+void LiberaMallocELiberaMemoria(void *ptr, size_t size) {
+  if (ptr) {
+    free(ptr);
+    if (total_memory_used >= size) {
+      total_memory_used -= size;
+    }
+  }
+  if (ptr == NULL) {
+    if (total_memory_used >= size) {
+      total_memory_used -= size;
+    }
+  }
 }
