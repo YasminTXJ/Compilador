@@ -23,7 +23,7 @@ int ehPalavraReservada(const char *token);
 int ehTipoDeDado(const char *token);
 int ehFuncao(const char *token);
 int ehVariavel(const char *token);
-int VerificaSeNomeDeVariavelEhValido(const char *token);
+int VerificaSeNomeDeVarOuFuncEhValido(const char *token);
 int ehNumero(const char *token);
 int ehOperador(const char *token);
 int ehMarcador(const char *token);
@@ -253,7 +253,7 @@ int VerificaSintaxeEhValida(char **tokens, int numTokens) {
     if (!token || strlen(token) == 0)
       continue;
 
-    //printf("Analisando token : %s\n", token);
+    // printf("Analisando token : %s\n", token);
     if (strcmp(token, ";") == 0)
       linhaAtual++;
 
@@ -300,7 +300,7 @@ int ehString(const char *token) {
 
 int ehFuncao(const char *token) {
   if (strncmp(token, "__", 2) == 0 &&
-      VerificaSeNomeDeVariavelEhValido(token + 2)) {
+      VerificaSeNomeDeVarOuFuncEhValido(token + 2)) {
     return 1;
   } else {
     return 0;
@@ -310,7 +310,7 @@ int ehFuncao(const char *token) {
 int ehVariavel(const char *token) {
   if (token[0] == '!' && islower(token[1])) {
     if (strlen(token) > 2) {
-      if (VerificaSeNomeDeVariavelEhValido(token + 2)) {
+      if (VerificaSeNomeDeVarOuFuncEhValido(token + 2)) {
         return 1;
       } else {
         return 0;
@@ -323,7 +323,7 @@ int ehVariavel(const char *token) {
   }
 }
 
-int VerificaSeNomeDeVariavelEhValido(const char *token) {
+int VerificaSeNomeDeVarOuFuncEhValido(const char *token) {
   for (int i = 0; token[i] != '\0'; i++) {
     if (!isalpha(token[i]) && !isdigit(token[i])) {
       return 0; // found something that is not a letter or digit
