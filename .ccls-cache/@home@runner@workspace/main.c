@@ -60,9 +60,8 @@ int main() {
 
   printf("\nInformacoes\nTokens encontrados: %d\n", numTokens);
   for (int i = 0; i < numTokens; i++) {
-    printf("Token[%d]: %s\n", i, resultado[i]);
+    // printf("Token[%d]: %s\n", i, resultado[i]);
     LiberaMallocELiberaMemoria(resultado[i], strlen(resultado[i]) + 1);
-    
   }
   LiberaMallocELiberaMemoria(resultado, numTokens * sizeof(char *));
 
@@ -253,25 +252,18 @@ int VerificaSintaxeEhValida(char **tokens, int numTokens) {
     const char *token = tokens[i];
     if (!token || strlen(token) == 0)
       continue;
-    
-    printf("Analisando token : %s\n", token);   
+
+    //printf("Analisando token : %s\n", token);
     if (strcmp(token, ";") == 0)
       linhaAtual++;
 
     if (ehPalavraReservada(token)) {
-      printf("token %s palavra reservada\n", token);  
     } else if (ehTipoDeDado(token)) {
-      printf("token %s tipo de dado\n", token);  
     } else if (ehFuncao(token)) {
-      printf("token %s funcao\n", token);
     } else if (ehVariavel(token)) {
-      printf("token %s variavel\n", token);  
     } else if (ehNumero(token)) {
-      printf("token %s numero\n", token);  
     } else if (ehString(token)) {
-      printf("token %s string\n", token);  
     } else if (ehOperador(token)) {
-      printf("token %s operador\n", token);
     } else if (ehMarcador(token)) {
     } else {
       printf("------------------------------------------------------\n");
@@ -279,10 +271,8 @@ int VerificaSintaxeEhValida(char **tokens, int numTokens) {
       printf("------------------------------------------------------\n");
       return 0;
     }
-
-   
   }
-   return 1;
+  return 1;
 }
 int ehPalavraReservada(const char *token) {
   for (int i = 0;
