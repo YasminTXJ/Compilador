@@ -50,7 +50,7 @@ int tokenCount = 0;
 
 int main() {
   int numTokens;
-  char **resultado = tokenizeFile("Codigo1.txt", &numTokens);
+  char **resultado = tokenizeFile("Erro_exemplo_9.txt", &numTokens);
 
   if (VerificaSintaxeEhValida(resultado, numTokens)) {
     printf("-={********************************************************}=-\n");
@@ -58,7 +58,7 @@ int main() {
     printf("-={********************************************************}=-\n");
   }
 
-  printf("\nInformacoes\nTokens encontrados: %d\n", numTokens);
+  printf("\n[Informacoes]\nTokens encontrados: %d\n", numTokens);
   for (int i = 0; i < numTokens; i++) {
     // printf("Token[%d]: %s\n", i, resultado[i]);
     LiberaMallocELiberaMemoria(resultado[i], strlen(resultado[i]) + 1);
@@ -67,7 +67,6 @@ int main() {
 
   printf("\n[MEMORIA]\n");
   printf("Maximo de memoria usada: %.2f KB\n", (float)max_memory_used / KB);
-  printf("Memoria total usada: %.2f KB\n", (float)total_memory_used / KB);
 
   return 0;
 }
@@ -84,7 +83,9 @@ char **tokenizeFile(const char *filename, int *num_tokens_ret) {
   }
 
   char line[1024];
+  verificaSeTemMemoriaDisponivelEFazOMalloc(sizeof(line));
   int linha = 1;
+  verificaSeTemMemoriaDisponivelEFazOMalloc(sizeof(linha));
   while (fgets(line, sizeof(line), file)) {
     tokenizeLine(line, linha++);
   }
@@ -113,6 +114,7 @@ void tokenizeLine(const char *line, int num_linha) {
     if (c == '"')
       dentroDeString = !dentroDeString; // verifica se está entre aspas
     // se estiver entre aspas não verifia se são validos na ASCII
+
     if (!dentroDeString && !verificaAsciiValido(c)) {
       printf("[LINHA %d] ERRO: Caractere inválido: %c \n", num_linha, c);
       i++;
@@ -123,6 +125,7 @@ void tokenizeLine(const char *line, int num_linha) {
     case ' ':
     case '\t':
     case '\n':
+    case '\r':
       token[j] = '\0';
       addToken(
           token); // se for espaço, tab ou quebra de linha, adiciona o token
@@ -208,6 +211,7 @@ void tokenizeLine(const char *line, int num_linha) {
       break;
     }
   }
+
   LiberaMallocELiberaMemoria(NULL, sizeof(int));
   LiberaMallocELiberaMemoria(NULL, sizeof(i));
   LiberaMallocELiberaMemoria(NULL, sizeof(j));
@@ -220,6 +224,7 @@ void tokenizeLine(const char *line, int num_linha) {
 int verificaAsciiValido(char c) { return (c >= 0 && c <= 127); }
 
 void addToken(const char *token) {
+  // printf("token = %s\n", token);
   if (strlen(token) == 0)
     return;
   verificaSeTemMemoriaDisponivelEFazOMalloc(
@@ -244,36 +249,6 @@ char *safe_strdup(const char *s) {
 //******-------------------------------------------------**********************----------------------------------------------------
 //           Funcoes que fazem a verificacao de sintaxe
 //******-------------------------------------------------**********************----------------------------------------------------
-
-int VerificaSintaxeEhValida(char **tokens, int numTokens) {
-  int linhaAtual = 1;
-
-  for (int i = 0; i < numTokens; i++) {
-    const char *token = tokens[i];
-    if (!token || strlen(token) == 0)
-      continue;
-
-    // printf("Analisando token : %s\n", token);
-    if (strcmp(token, ";") == 0)
-      linhaAtual++;
-
-    if (ehPalavraReservada(token)) {
-    } else if (ehTipoDeDado(token)) {
-    } else if (ehFuncao(token)) {
-    } else if (ehVariavel(token)) {
-    } else if (ehNumero(token)) {
-    } else if (ehString(token)) {
-    } else if (ehOperador(token)) {
-    } else if (ehMarcador(token)) {
-    } else {
-      printf("------------------------------------------------------\n");
-      printf("\tERRO: Sintaxe invalida ('%s')- LINHA %d \n", token, linhaAtual);
-      printf("------------------------------------------------------\n");
-      return 0;
-    }
-  }
-  return 1;
-}
 int ehPalavraReservada(const char *token) {
   for (int i = 0;
        i < sizeof(palavrasReservadas) / sizeof(palavrasReservadas[0]); i++) {
@@ -360,6 +335,49 @@ int ehMarcador(const char *token) {
       return 1;
   }
   return 0;
+}
+
+int VerificaSintaxeEhValida(char **tokens, int numTokens) {
+  int linhaAtual = 1;
+
+  for (int i = 0; i < numTokens; i++) {
+    const char *token = tokens[i];
+    //printf("Analisando token : %s\n", token);
+    if (strcmp(token, " ") == 0) {
+      continue;
+    }
+    if (!token || strlen(token) == 0) {
+      printf("continuei\n");
+      continue;
+    }
+
+    if (strcmp(token, ";") == 0)
+      linhaAtual++;
+
+    if (ehPalavraReservada(token)) {
+      //printf("eh palavra reservada - token %s\n", token);
+    } else if (ehTipoDeDado(token)) {
+      //printf("eh tipo de dado - token %s\n", token);
+    } else if (ehFuncao(token)) {
+      //printf("eh funcao - token %s\n", token);
+    } else if (ehVariavel(token)) {
+      //printf("eh variavel - token %s\n", token);
+    } else if (ehNumero(token)) {
+      //printf("eh numero - token %s\n", token);
+    } else if (ehString(token)) {
+      //printf("eh string - token %s\n", token);
+    } else if (ehOperador(token)) {
+      //printf("eh operador - token %s\n", token);
+    } else if (ehMarcador(token)) {
+      //printf("eh marcador - token %s\n", token);
+    } else {
+      printf("------------------------------------------------------\n");
+      printf("\tERRO: Sintaxe invalida ('%s')- LINHA %d \n", token, linhaAtual);
+      printf("------------------------------------------------------\n");
+      return 0;
+    }
+  }
+  return 1;
 }
 
 //******-------------------------------------------------**********************----------------------------------------------------

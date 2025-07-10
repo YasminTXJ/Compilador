@@ -1,0 +1,6 @@
+principal(){
+inteiro !d;
+escreva("Escreva um numero ");
+leia (!d);
+  escreva("O numero informado é  ", !d);
+}

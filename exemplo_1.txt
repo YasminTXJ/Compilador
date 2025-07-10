@@ -1,0 +1,18 @@
+principal(){
+inteiro !a, !b2 = 7;
+decimal !cc[2.5];
+inteiro !d;
+!b2 = !a;
+escreva("Escreva um numero ");
+leia (!a);
+se (!a <= !b2)
+escreva(" A é maior", !a);
+senao escreva("B e maior", !b);
+para (!d = 1; !d<=100; !d=!d+2){
+ escreva("D", !d);
+}
+}
+
+inteiro !g[leia] <= 9,
+
+++!a++

@@ -1,4 +1,4 @@
-principal(){cccc
+principal(){
  inteiro !a, !b2 = 7;
  inteiro !d;
  escreva("Escreva um número ");

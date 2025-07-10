@@ -1,0 +1,7 @@
+princpal(){
+ inteiro !a, !b2 = 7; 
+inteiro !d; 
+escreva("Escreva um numero ");
+leia (!a); 
+d = __soma (!a, !b2) 
+}
