@@ -1,0 +1,67 @@
+Na análise sintática do seu compilador, você vai pegar a saída da análise léxica (a lista de tokens já classificados) e verificar se esses tokens estão organizados de acordo com as regras gramaticais que o documento de especificação define.
+
+Olhando sua especificação, essa parte significa validar a estrutura e a ordem dos elementos, garantindo que eles seguem o “formato” correto para a linguagem proposta.
+Basicamente, você precisa criar um parser que:
+
+1. Reconheça a ordem e agrupamento corretos
+Funções e módulos:
+
+Deve existir exatamente um principal().
+
+Estrutura obrigatória: principal() ou funcao __nome(...) { ... }.
+
+Verificar parâmetros e delimitadores ( ) e { }.
+
+Declarações de variáveis:
+
+Sempre com tipo (inteiro, texto, decimal), depois marcador !, nome válido e ; no final.
+
+Validação de colchetes [ ] quando aplicável.
+
+Comandos:
+
+leia(...) → variáveis já declaradas, separadas por vírgula.
+
+escreva(...) → pode misturar texto (entre aspas) e variáveis, separados por vírgula.
+
+se (...) → teste válido, depois bloco ou comando único; senao opcional.
+
+para (...) → exatamente três expressões separadas por ;.
+
+Operadores:
+
+Apenas os da lista permitida (ex.: +, -, ==, <=, etc.).
+
+Sem espaços proibidos (ex.: não pode ter = <).
+
+2. Valide o duplo balanceamento
+Garantir que parênteses, chaves, colchetes e aspas sempre abrem e fecham corretamente, e na ordem correta.
+
+3. Trate erros sintáticos
+Se a ordem ou formato estiver errado, interromper a execução e informar:
+
+Número da linha.
+
+Mensagem clara do erro.
+
+Exemplos:
+
+principal( sem fechar ).
+
+Falta de { ou } após declaração de função.
+
+se sem condição válida.
+
+4. Ferramentas que você pode usar no C
+Criar funções recursivas para cada regra da linguagem (técnica de recursive descent parsing).
+
+Usar uma tabela de tokens (resultado do léxico) e um índice para “andar” na lista.
+
+Função auxiliar tipo match(tokenEsperado) para verificar e avançar.
+
+Estruturas de decisão para validar a gramática conforme a especificação.
+
+📌 Em resumo:
+Na análise sintática você vai implementar a gramática dessa linguagem (que está descrita em forma de regras no PDF), e fazer com que seu código leia os tokens e confirme se a sequência está de acordo com essas regras. Se não estiver, para e mostra o erro.
+
+Se você quiser, posso já te transformar essa especificação em uma gramática formal (BNF/EBNF) para você usar direto no parser. Isso facilitaria muito a implementação.

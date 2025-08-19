@@ -1,0 +1,22 @@
+
+Analise  Sintática:
+
+- Struct com token e linha e ponteiro pra proxima posicao
+- Deve existir exatamente um principal().
+- Verificar duplo balanceamento: parâmetros e delimitadores ( ) e { } e [].
+- Classificação da variavéis
+- Construção da tabela de símbolos
+- Verificação da escrita dos comandos:
+  leia(...) → variáveis já declaradas, separadas por vírgula.
+  escreva(...) → pode misturar texto (entre aspas) e variáveis, separados por vírgula.
+  se (...) → teste válido, depois bloco ou comando único; senao opcional.
+  para (...) → exatamente três expressões separadas por ;.
+- Sem espaços proibidos (ex.: não pode ter = <).
+
+- Trate erros sintáticos:
+Se a ordem ou formato estiver errado, interromper a execução e informar:
+
+Número da linha.
+
+Mensagem clara do erro.
+

@@ -1,2 +1,0 @@
-leia !aaa escreva;
-inteiro !b = "caramba uma string";
