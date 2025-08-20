@@ -8,6 +8,7 @@ Analise  Sintática:
 
 - Construção da tabela de símbolos - Falta adicionar as funcoes
 
+- verificar lexica
 
 - Verificação da escrita dos comandos:
   leia(...) → variáveis já declaradas, separadas por vírgula.

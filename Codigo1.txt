@@ -1,16 +1,18 @@
 principal(){
 inteiro !a , !b2 = 70000000;
 inteiro !x = 5;
- decimal !cc[2.5];
- inteiro !d;
- !b2 = !a;
- escreva("Escreva um número" );
- leia (!a !a);
+decimal !cc[2.5];
+inteiro !d;
+!b2 = !a;
+escreva("Escreva um número" );
+leia (!a !a);
 se (!a <= !b2)
  escreva(" A é maior", !a);
  senao escreva("B é maior", !a);
  para (!d = 1; !d<=100; !d=!d+2){
  escreva("D", !d);
+
+  
  }
  !a =5;
 }

@@ -170,10 +170,17 @@ int ehNumero(const char *token) {
   return ponto <= 1;
 }
 
-int ehOperador(const char *token) {
+int ehOperador(const TokenNode *token) {
   for (int i = 0; i < sizeof(operadores) / sizeof(operadores[0]); i++)
-    if (strcmp(token, operadores[i]) == 0)
+    if (strcmp(token->token, operadores[i]) == 0) {
+      // TokenNode *proximo = token->prox;
+      // for (int j = 0; j < sizeof(operadores) / sizeof(operadores[0]); j++) {
+      //   if (proximo->token == operadores[j])
+      //     return 0;
+      // }
       return 1;
+    }
+
   return 0;
 }
 
@@ -198,7 +205,7 @@ Simbolo *buscarSimbolo(Simbolo *tabela, const char *nome, const char *funcao) {
 Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
                           const char *valor, const char *funcao) {
   // Verifica se já existe
- // printf("Adicionando '%s' '%s' '%s' '%s'\n", tipo, nome, valor, funcao);
+  // printf("Adicionando '%s' '%s' '%s' '%s'\n", tipo, nome, valor, funcao);
   Simbolo *existe = buscarSimbolo(inicio, nome, funcao);
 
   if (existe != NULL) {
@@ -423,7 +430,7 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual,
   if (ehVariavel(token->prox->token)) {
     strcpy(nome_atual, token->prox->token);
     // printf("nome atual = %s\n", nome_atual);
-  }else{
+  } else {
     return 0;
   }
 
@@ -434,20 +441,22 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual,
     strcat(nome_atual, "[");
     atual = atual->prox;
 
-    //pega o que está entre os colchetes
-    if(ehNumero(atual->token )){
-       strcat(nome_atual, atual->token);
-       atual = atual->prox;
-       if(atual && ehMarcador(atual->token) && strcmp(atual->token, "]") == 0){
-         strcat(nome_atual, "]"); 
-       }
+    // pega o que está entre os colchetes
+    if (ehNumero(atual->token)) {
+      strcat(nome_atual, atual->token);
       atual = atual->prox;
-    }else{
-      printf("-={********************************************************}=-\n");
-      printf("ERRO: Array '%s' não é um número - LINHA %d\n", atual->token, atual->linha);
+      if (atual && ehMarcador(atual->token) && strcmp(atual->token, "]") == 0) {
+        strcat(nome_atual, "]");
+      }
+      atual = atual->prox;
+    } else {
+      printf(
+          "-={********************************************************}=-\n");
+      printf("ERRO: Array '%s' não é um número - LINHA %d\n", atual->token,
+             atual->linha);
       exit(1);
     }
-   
+
     /*
     while (atual && strcmp(atual->token, "]") != 0) {
       strcat(nome_atual, atual->token);
@@ -461,7 +470,7 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual,
   }
 
   // Verifica se há um operador "=" após o nome
-  if (atual && ehOperador(atual->token) && strcmp(atual->token, "=") == 0) {
+  if (atual && ehOperador(atual) && strcmp(atual->token, "=") == 0) {
     // printf("eh operador = %s\n", atual->token);
 
     atual = atual->prox;
@@ -532,17 +541,19 @@ int VerificaSintaxeEhValida(TokenNode *head) {
       } else if (strcmp(token, "se") == 0 || strcmp(token, "senao") == 0 ||
                  strcmp(token, "para") == 0) {
         int num_linha = current->linha;
-        current = current->prox;
+        TokenNode *currentAux = current->prox;
+
         // percorrer todos os tokens da linha
-        while (current && current->linha == num_linha && current != NULL) {
+        while (currentAux && currentAux->linha == num_linha &&
+               currentAux != NULL) {
           // se encontro um { na mesma linha que a palavra reservada, entao
           // adiciono um na flag para indicar que o proximo } nao deve alterar o
           // escopo
-          if (strcmp(current->token, "{") == 0) {
+          if (strcmp(currentAux->token, "{") == 0) {
             flag_escopo_palavra_reservada++;
-            current = NULL;
+            currentAux = NULL;
           }
-          current = current->prox;
+          currentAux = currentAux->prox;
         }
       }
     } else if (ehTipoDeDado(token)) {
@@ -553,7 +564,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
     } else if (ehVariavel(token)) {
       // se o proximo token for um operador de atribuição , eu pego o valor e
       // atribuo a variavel
-      if (current->prox && ehOperador(current->prox->token) &&
+      if (current->prox && ehOperador(current->prox) &&
           strcmp(current->prox->token, "=") == 0) {
         strcpy(nome_atual, token); // nome da variável
 
@@ -577,8 +588,18 @@ int VerificaSintaxeEhValida(TokenNode *head) {
 
         flag_escopo_palavra_reservada--;
       }
-    } else if (ehNumero(token) || ehString(token) || ehOperador(token) ||
-               ehMarcador(token)) {
+    } else if (ehOperador(current)) {
+      if (ehOperador(current->prox)) {
+        printf(
+            "-={********************************************************}=-\n");
+        printf("ERRO: Sintaxe invalida ('%s') - LINHA %d\n", token,
+               current->linha);
+        printf(
+            "-={********************************************************}=-\n");
+        exit(1);
+      }
+
+    } else if (ehNumero(token) || ehString(token) || ehMarcador(token)) {
     } else {
       printf(
           "-={********************************************************}=-\n");
@@ -662,15 +683,16 @@ int main() {
   int numTokens;
   TokenNode *resultado = tokenizeFile("Codigo1.txt", &numTokens);
 
-  if(verificarBalanceamento(resultado)){
+  if (verificarBalanceamento(resultado)) {
     if (VerificaSintaxeEhValida(resultado)) {
-      printf("-={********************************************************}=-\n");
+      printf(
+          "-={********************************************************}=-\n");
       printf("\t\tCodigo Compilado com Sucesso\n");
-      printf("-={********************************************************}=-\n");
+      printf(
+          "-={********************************************************}=-\n");
       imprimirTabela(tabela_simbolos);
     }
   }
-  
 
   printf("\n[Informacoes]\nTokens encontrados: %d\n", numTokens);
 
