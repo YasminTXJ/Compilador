@@ -2,19 +2,19 @@
 Analise  Sintática:
 
 - Struct com token e linha e ponteiro pra proxima posicao - Ok
-- Deve existir exatamente um principal(). - Verificação sendo realizada, ver se o erro deve parar a compilação ou não
+- Deve existir exatamente um principal(). - Ok
 
 - Verificar duplo balanceamento: parâmetros e delimitadores ( ) e { } e []. - OK
 
-- Classificação da variavéis
-
 - Construção da tabela de símbolos - Falta adicionar as funcoes
+
 
 - Verificação da escrita dos comandos:
   leia(...) → variáveis já declaradas, separadas por vírgula.
   escreva(...) → pode misturar texto (entre aspas) e variáveis, separados por vírgula.
   se (...) → teste válido, depois bloco ou comando único; senao opcional.
   para (...) → exatamente três expressões separadas por ;.
+  
 - Sem espaços proibidos (ex.: não pode ter = <).
 
 - Trate erros sintáticos:
@@ -24,3 +24,9 @@ Número da linha.
 
 Mensagem clara do erro.
 
+- Tratar a parte semântica:
+  - Verificar se o valor atribuido a variavel é compativél com o tipo
+
+
+   escreva("Escreva um número" ); 
+   

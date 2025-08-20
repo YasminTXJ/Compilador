@@ -4,7 +4,7 @@ inteiro !x = 5;
  decimal !cc[2.5];
  inteiro !d;
  !b2 = !a;
- escreva("Escreva um número ");
+ escreva("Escreva um número" );
  leia (!a !a);
 se (!a <= !b2)
  escreva(" A é maior", !a);
@@ -14,7 +14,7 @@ se (!a <= !b2)
  }
  !a =5;
 }
-decimal !ff[5.5];
+decimal !ff[5.5] = 2.5;
 funcao __printa {
     texto !msg = "Estou na funacao printa!";
 }

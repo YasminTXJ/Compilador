@@ -198,6 +198,7 @@ Simbolo *buscarSimbolo(Simbolo *tabela, const char *nome, const char *funcao) {
 Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
                           const char *valor, const char *funcao) {
   // Verifica se já existe
+ // printf("Adicionando '%s' '%s' '%s' '%s'\n", tipo, nome, valor, funcao);
   Simbolo *existe = buscarSimbolo(inicio, nome, funcao);
 
   if (existe != NULL) {
@@ -422,6 +423,8 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual,
   if (ehVariavel(token->prox->token)) {
     strcpy(nome_atual, token->prox->token);
     // printf("nome atual = %s\n", nome_atual);
+  }else{
+    return 0;
   }
 
   TokenNode *atual = token->prox->prox;
@@ -431,15 +434,30 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual,
     strcat(nome_atual, "[");
     atual = atual->prox;
 
+    //pega o que está entre os colchetes
+    if(ehNumero(atual->token )){
+       strcat(nome_atual, atual->token);
+       atual = atual->prox;
+       if(atual && ehMarcador(atual->token) && strcmp(atual->token, "]") == 0){
+         strcat(nome_atual, "]"); 
+       }
+      atual = atual->prox;
+    }else{
+      printf("-={********************************************************}=-\n");
+      printf("ERRO: Array '%s' não é um número - LINHA %d\n", atual->token, atual->linha);
+      exit(1);
+    }
+   
+    /*
     while (atual && strcmp(atual->token, "]") != 0) {
       strcat(nome_atual, atual->token);
       atual = atual->prox;
     }
 
-    if (atual && strcmp(atual->token, "]") == 0) {
+    if (atual && strcmp(atual->token, "]") == 0 && atual) {
       strcat(nome_atual, "]");
       atual = atual->prox; // Avança além do colchete
-    }
+    }*/
   }
 
   // Verifica se há um operador "=" após o nome
@@ -644,12 +662,15 @@ int main() {
   int numTokens;
   TokenNode *resultado = tokenizeFile("Codigo1.txt", &numTokens);
 
-  if (VerificaSintaxeEhValida(resultado) && verificarBalanceamento(resultado)) {
-    printf("-={********************************************************}=-\n");
-    printf("\t\tCodigo Compilado com Sucesso\n");
-    printf("-={********************************************************}=-\n");
-    imprimirTabela(tabela_simbolos);
+  if(verificarBalanceamento(resultado)){
+    if (VerificaSintaxeEhValida(resultado)) {
+      printf("-={********************************************************}=-\n");
+      printf("\t\tCodigo Compilado com Sucesso\n");
+      printf("-={********************************************************}=-\n");
+      imprimirTabela(tabela_simbolos);
+    }
   }
+  
 
   printf("\n[Informacoes]\nTokens encontrados: %d\n", numTokens);
 
