@@ -1,22 +1,20 @@
 Na análise sintática do seu compilador, você vai pegar a saída da análise léxica (a lista de tokens já classificados) e verificar se esses tokens estão organizados de acordo com as regras gramaticais que o documento de especificação define.
 
-Olhando sua especificação, essa parte significa validar a estrutura e a ordem dos elementos, garantindo que eles seguem o “formato” correto para a linguagem proposta.
-Basicamente, você precisa criar um parser que:
 
 1. Reconheça a ordem e agrupamento corretos
 Funções e módulos:
 
-Deve existir exatamente um principal().
+Deve existir exatamente um principal(). - ok
 
 Estrutura obrigatória: principal() ou funcao __nome(...) { ... }.
 
-Verificar parâmetros e delimitadores ( ) e { }.
+Verificar parâmetros e delimitadores ( ) e { }. - ok
 
 Declarações de variáveis:
 
-Sempre com tipo (inteiro, texto, decimal), depois marcador !, nome válido e ; no final.
+Sempre com tipo (inteiro, texto, decimal), depois marcador !, nome válido e ; no final. - ok
 
-Validação de colchetes [ ] quando aplicável.
+Validação de colchetes [ ] quando aplicável. - ok
 
 Comandos:
 

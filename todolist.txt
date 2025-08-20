@@ -1,11 +1,15 @@
 
 Analise  Sintática:
 
-- Struct com token e linha e ponteiro pra proxima posicao
-- Deve existir exatamente um principal().
-- Verificar duplo balanceamento: parâmetros e delimitadores ( ) e { } e []. -OK
+- Struct com token e linha e ponteiro pra proxima posicao - Ok
+- Deve existir exatamente um principal(). - Verificação sendo realizada, ver se o erro deve parar a compilação ou não
+
+- Verificar duplo balanceamento: parâmetros e delimitadores ( ) e { } e []. - OK
+
 - Classificação da variavéis
-- Construção da tabela de símbolos - Falta adicionar as funções na tabela de simbolo
+
+- Construção da tabela de símbolos - Falta adicionar as funcoes
+
 - Verificação da escrita dos comandos:
   leia(...) → variáveis já declaradas, separadas por vírgula.
   escreva(...) → pode misturar texto (entre aspas) e variáveis, separados por vírgula.
