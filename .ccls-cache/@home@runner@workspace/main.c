@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
+// 0 falso
 #define MAX_TOKEN_SIZE 256
 #define MAX_LINE 1024
 #define KB 1024
@@ -169,7 +169,6 @@ int ehNumero(const char *token) {
   }
   return ponto <= 1;
 }
-
 int ehOperador(const TokenNode *token) {
   for (int i = 0; i < sizeof(operadores) / sizeof(operadores[0]); i++)
     if (strcmp(token->token, operadores[i]) == 0) {
@@ -184,6 +183,172 @@ int ehOperador(const TokenNode *token) {
   return 0;
 }
 
+TokenNode* verificaParDeExpressao(TokenNode *tk){
+  TokenNode *expr = tk;
+  if (!expr) {
+      printf("ERRO SINTÁTICO: condição vazia no 'se' - LINHA %d\n", tk->linha);
+      exit(1);
+  }
+  // operando 1
+  if (!(ehVariavel(expr->token) || ehNumero(expr->token) || ehString(expr->token))) {
+      printf("ERRO SINTÁTICO: condição inválida ('%s') - LINHA %d\n", expr->token, expr->linha);
+      exit(1);
+  }
+  // operador
+  TokenNode *op = expr->prox;
+  if (!op || !ehOperador(op)) {
+      printf("ERRO SINTÁTICO: esperado operador após '%s' - LINHA %d\n", expr->token, expr->linha);
+      exit(1);
+  }
+  // checagem semântica de operadores (6.5 + 3.2.3 + 3.2.4)
+  if (strcmp(op->token, "=<") == 0 || strcmp(op->token, "=>") == 0 ||
+      strcmp(op->token, "><") == 0 || strcmp(op->token, "!=") == 0 ||
+      strcmp(op->token, "<<") == 0 || strcmp(op->token, ">>") == 0) {
+      printf("ERRO SEMÂNTICO: operador inválido '%s' - LINHA %d\n", op->token, op->linha);
+      exit(1);
+  }
+  if (ehOperador(op) && ehOperador(op->prox)) {
+      printf("ERRO SEMÂNTICO: operadores duplicados na condição do 'se' - LINHA %d\n", op->linha);
+      exit(1);
+  }
+  // operando 2
+  TokenNode *expr2 = op->prox;
+  if (!expr2 || !(ehVariavel(expr2->token) || ehNumero(expr2->token) || ehString(expr2->token))) {
+      printf("ERRO SINTÁTICO: esperado operando após operador '%s' - LINHA %d\n", op->token, op->linha);
+      exit(1);
+  }
+  // restrição: texto só pode usar == ou <>
+  if ((ehString(expr->token) || ehString(expr2->token)) &&
+      (strcmp(op->token, "<") == 0 || strcmp(op->token, "<=") == 0 ||
+       strcmp(op->token, ">") == 0 || strcmp(op->token, ">=") == 0)) {
+      printf("ERRO SEMÂNTICO: operador '%s' inválido para texto - LINHA %d\n", op->token, op->linha);
+      exit(1);
+  }
+  if((!expr2->prox || strcmp(expr2->prox->token, ")") != 0 ) && ( !strcmp(expr2->prox->token, "&&") && !strcmp(expr2->prox->token, "||") )){
+      printf("ERRO SINTÁTICO: esperado ')' após expressão - LINHA %d\n", expr2->linha);
+      exit(1);
+  }else{
+    if( strcmp(expr2->prox->token, "&&")==0 || strcmp(expr2->prox->token, "||") ==0){
+      //printf("Achei um operador logico %s ",expr2->prox->token);
+       TokenNode *res = verificaParDeExpressao(expr2->prox->prox);
+      return res;
+    }else{
+      //retorna o token depois do )
+        return expr2->prox->prox;
+    }
+  }
+  printf("erro ao validar expressão do se Linha : %d\n", tk->linha);
+  exit(1);
+}
+// 6) verifica se é bloco de várias linhas (abre com '{')
+bool ehBlocoMultilinha(const TokenNode *tk) {
+    if (!tk) return false;
+    return strcmp(tk->token, "{") == 0;
+}
+int verificaSe(const TokenNode *tk) {
+    // 1) confere se é "se"
+    if (!tk || strcmp(tk->token, "se") != 0) {
+        printf("ERRO SINTÁTICO: esperado 'se' - LINHA %d\n", tk->linha);
+        exit(1);
+    }
+    // 2) precisa ter "(" logo após
+    if (!tk->prox || strcmp(tk->prox->token, "(") != 0) {
+        printf("ERRO SINTÁTICO: esperado '(' após 'se' - LINHA %d\n", tk->linha);
+        exit(1);
+    }
+    // 3) expressão entre ()
+    TokenNode *expr = tk->prox->prox;
+
+
+    // 4) agora validar o bloco verdadeiro
+    TokenNode *blocoV = verificaParDeExpressao(expr);
+    if (!blocoV) {
+        printf("ERRO SINTÁTICO: esperado bloco após condição do 'se' - LINHA %d\n", expr->linha);
+        exit(1);
+    }
+
+    // se for várias linhas → precisa abrir com {
+    if (ehBlocoMultilinha(blocoV)) {
+        if (strcmp(blocoV->token, "{") != 0) {
+            printf("ERRO SINTÁTICO: bloco múltiplo sem '{' no 'se' - LINHA %d\n", blocoV->linha);
+            exit(1);
+        }
+        // percorre até achar }
+        TokenNode *cur = blocoV->prox;
+        int encontrouFecha = 0;
+        while (cur && strcmp(cur->token, "}") != 0) {
+            if (ehTipoDeDado(cur->token)) {
+                printf("ERRO SEMÂNTICO: declaração de variável não permitida dentro do 'se' - LINHA %d\n", cur->linha);
+                exit(1);
+            }
+            // pode chamar verificaSe recursivamente (se aninhado)
+            if (strcmp(cur->token, "se") == 0) {
+                verificaSe(cur);
+            }
+            cur = cur->prox;
+        }
+        if (!cur) {
+            printf("ERRO SINTÁTICO: bloco do 'se' não fechado com '}' - LINHA %d\n", blocoV->linha);
+            exit(1);
+        }
+        encontrouFecha = 1;
+    } else {
+        if (ehTipoDeDado(blocoV->token)) {
+            printf("ERRO SEMÂNTICO: declaração de variável não permitida dentro do 'se' - LINHA %d\n", blocoV->linha);
+            exit(1);
+        }
+    }
+
+    // 5) checar senao (opcional)
+    TokenNode *senao = blocoV->prox;
+    while (senao && strcmp(senao->token, ";") == 0) {
+        senao = senao->prox; // pula ;
+    }
+    if (senao && strcmp(senao->token, "senao") == 0) {
+        // mesmo processo de bloco do senao
+        TokenNode *blocoF = senao->prox;
+        if (!blocoF) {
+            printf("ERRO SINTÁTICO: esperado bloco após 'senao' - LINHA %d\n", senao->linha);
+            exit(1);
+        }
+        if (ehBlocoMultilinha(blocoF)) {
+            if (strcmp(blocoF->token, "{") != 0) {
+                printf("ERRO SINTÁTICO: bloco múltiplo sem '{' no 'senao' - LINHA %d\n", blocoF->linha);
+                exit(1);
+            }
+            TokenNode *cur = blocoF->prox;
+            while (cur && strcmp(cur->token, "}") != 0) {
+                if (ehTipoDeDado(cur->token)) {
+                    printf("ERRO SEMÂNTICO: declaração de variável não permitida dentro do 'senao' - LINHA %d\n", cur->linha);
+                    exit(1);
+                }
+                if (strcmp(cur->token, "se") == 0) {
+                    verificaSe(cur);
+                }
+                cur = cur->prox;
+            }
+            if (!cur) {
+                printf("ERRO SINTÁTICO: bloco do 'senao' não fechado com '}' - LINHA %d\n", blocoF->linha);
+                exit(1);
+            }
+        } else {
+            if (!blocoF->prox || strcmp(blocoF->prox->token, ";") != 0) {
+                printf("ERRO SINTÁTICO: comando único do 'senao' deve terminar com ';' - LINHA %d\n", blocoF->linha);
+                exit(1);
+            }
+            if (ehTipoDeDado(blocoF->token)) {
+                printf("ERRO SEMÂNTICO: declaração de variável não permitida dentro do 'senao' - LINHA %d\n", blocoF->linha);
+                exit(1);
+            }
+        }
+    }
+
+    return 1; // passou por tudo
+}
+
+
+
+
 int ehMarcador(const char *token) {
   for (int i = 0; i < sizeof(marcadores) / sizeof(marcadores[0]); i++)
     if (strcmp(token, marcadores[i]) == 0)
@@ -191,10 +356,41 @@ int ehMarcador(const char *token) {
   return 0;
 }
 
+// Função que retorna o nome base da variável (antes do '[')
+char* getNomeBase(const char *token) {
+    int len = 0;
+
+    // Conta até o '[' ou fim da string
+    while (token[len] != '\0' && token[len] != '[') {
+        len++;
+    }
+
+    // Aloca memória para a string base (+1 para '\0')
+    char *base = (char *)malloc(len + 1);
+    if (!base) {
+        perror("malloc falhou");
+        exit(1);
+    }
+
+    // Copia os caracteres
+    strncpy(base, token, len);
+    base[len] = '\0'; // fecha a string
+
+    return base; // quem chamar deve liberar a memória depois
+}
 Simbolo *buscarSimbolo(Simbolo *tabela, const char *nome, const char *funcao) {
   Simbolo *atual = tabela;
+  char nomeBase [50] ;
   while (atual != NULL) {
-    if (strcmp(atual->nome, nome) == 0 && strcmp(atual->escopo, funcao) == 0) {
+    //pega só o nome da várivel sem o tamanho do array para decimal
+    if(strcmp(atual->tipo, "decimal") == 0 ){
+      strcpy(nomeBase, getNomeBase(atual->nome));
+    }
+    //pego o nome normal
+    if(strcmp(atual->tipo, "decimal") != 0 ){
+      strcpy(nomeBase, getNomeBase(atual->nome));
+    }
+    if (strcmp(nomeBase, nome) == 0 && strcmp(atual->escopo, funcao) == 0) {
       return atual; // Encontrou
     }
     atual = atual->prox;
@@ -509,12 +705,55 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual,
   return 0;
 }
 
+void verificaLeia(TokenNode *token){
+  TokenNode *prox = token->prox->prox;
+  if(prox->token == NULL){
+    printf("-={********************************************************}="
+       "-\n");
+    printf("ERRO Sintático: Comando 'leia' sem variável - LINHA %d\n", prox->linha);
+    printf("-={********************************************************}="
+       "-\n");
+    exit(1);
+  }
+  if(prox->token != NULL && !ehVariavel(prox->token)){
+    printf("-={********************************************************}="
+       "-\n");
+    printf("ERRO Semântico: Comando 'leia' só pode ler variavéis - LINHA %d\n", prox->linha);
+    printf("-={********************************************************}="
+       "-\n");
+    exit(1);
+  }
+  //pode ler mais de uma variavel, separadas por virgula e declaradas anteriormente
+ if(prox->token != NULL && ehVariavel(prox->token) && ehVariavel(prox->prox->token)){
+   printf("-={********************************************************}="
+      "-\n");
+   printf("ERRO Sintático: As variavéis do comando 'leia' não estão separadas por ','- LINHA %d\n", prox->linha);
+   printf("-={********************************************************}="
+      "-\n");
+   exit(1);
+ }
+  while(prox->token != NULL && ehVariavel(prox->token) && strcmp(prox->prox->token,",") == 0){
+      prox = prox->prox->prox;
+  } 
+
+  if(prox->token != NULL && ehVariavel(prox->token) && strcmp(prox->prox->token,")") ==0 && strcmp(prox->prox->prox->token,";")==0) {
+    return;
+  }else{
+    printf("-={********************************************************}="
+       "-\n");
+    printf("ERRO Sintático: Comando 'leia' escrito incorretamente- LINHA %d\n", prox->linha);
+    printf("-={********************************************************}="
+       "-\n");
+    exit(1);
+  }
+}
 // Verificação de sintaxe usando lista encadeada
 int VerificaSintaxeEhValida(TokenNode *head) {
 
   TokenNode *current = head;
   while (current) {
     const char *token = current->token;
+     //printf("Token: %s - Linha: %d\n", token, current->linha);
     if (strcmp(token, " ") == 0) {
       current = current->prox;
       continue;
@@ -555,6 +794,12 @@ int VerificaSintaxeEhValida(TokenNode *head) {
           }
           currentAux = currentAux->prox;
         }
+        if (strcmp(token, "se") == 0) {
+          verificaSe(current);
+        }
+
+      }else  if (strcmp(token, "leia") == 0){
+      verificaLeia(current);
       }
     } else if (ehTipoDeDado(token)) {
       strcpy(tipo_atual, token);
@@ -579,6 +824,16 @@ int VerificaSintaxeEhValida(TokenNode *head) {
         }
 
         atribuirValor(tabela_simbolos, nome_atual, valor_atual, escopo_atual);
+      }
+      //verifica se a variavel existe na tabela de simbolos
+      if (buscarSimbolo(tabela_simbolos, token, escopo_atual) == NULL){
+         printf("-={********************************************************}="
+                 "-\n");
+          printf("ERRO Semântico: Variável '%s' não declarada - LINHA %d\n", token,
+                 current->linha);
+        printf("-={********************************************************}="
+                 "-\n");
+        exit(1);
       }
 
     } else if (ehMarcador(token) && strcmp(token, "}") == 0) {
