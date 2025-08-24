@@ -747,13 +747,72 @@ void verificaLeia(TokenNode *token){
     exit(1);
   }
 }
+
+void verificaEscreva(TokenNode *token){
+  TokenNode *prox = token->prox->prox;
+
+  //escreva(" A é maior", !a);
+  if(prox->token == NULL){
+    printf("-={********************************************************}="
+       "-\n");
+    printf("ERRO Sintático: Comando 'excreva' sem variável ou texto - LINHA %d\n", prox->linha);
+    printf("-={********************************************************}="
+       "-\n");
+    exit(1);
+  }
+  if(prox->token != NULL && !ehVariavel(prox->token) && !ehString(prox->token)){
+    printf("-={********************************************************}="
+       "-\n");
+    printf("ERRO Semântico: Comando 'escreva' só pode escrever variavéis ou texto - LINHA %d\n", prox->linha);
+    printf("-={********************************************************}="
+       "-\n");
+    exit(1);
+  }
+  //pode escrever mais de uma variavel ou texto, separadas por virgula e declaradas anteriormente
+ // escreva("Escreva um número", !a , !x ,);
+  while(prox->token != NULL && (ehVariavel(prox->token)==0 || ehString(prox->token)==0) && strcmp(prox->prox->token,",") == 0) {
+
+    prox = prox->prox->prox;  //pula a virgula
+
+  }
+  //se tiver uma virgula sobrando, ele vai sair do while no )
+  if(strcmp(prox->token,")") ==0){
+    printf("-={********************************************************}="
+       "-\n");
+    printf("ERRO Sintático: Comando 'escreva' escrito incorretamente- LINHA %d\n", prox->linha);
+    printf("-={********************************************************}="
+       "-\n");
+    exit(1);
+  }
+  //se tiver certo ele sai do while com uma variavel ou texto 
+  if(prox->token != NULL && (ehVariavel(prox->token)==0 || ehString(prox->token)==0) && strcmp(prox->prox->token,")") ==0 ){
+    if(strcmp(prox->prox->prox->token,";")==0){
+      return;
+    }else{
+      printf("-={********************************************************}="
+       "-\n");
+      printf("ERRO Sintático: Comando 'escreva' escrito incorretamente- LINHA %d\n", prox->linha);
+      printf("-={********************************************************}="
+       "-\n");
+       exit(1);
+    }
+  }
+  if(prox->token != NULL && (ehVariavel(prox->token)==0 || ehString(prox->token)==0) && ehTipoDeDado(prox->token)!= 0 ){
+    printf("-={********************************************************}="
+       "-\n");
+    printf("ERRO Sintático: Comando 'escreva' escrito incorretamente ,não podem conter declarações - LINHA %d\n", prox->linha);
+    printf("-={********************************************************}="
+       "-\n");
+    exit(1);
+  }
+}
 // Verificação de sintaxe usando lista encadeada
 int VerificaSintaxeEhValida(TokenNode *head) {
 
   TokenNode *current = head;
   while (current) {
     const char *token = current->token;
-     //printf("Token: %s - Linha: %d\n", token, current->linha);
+    //printf("Token: %s - Linha: %d\n", token, current->linha);
     if (strcmp(token, " ") == 0) {
       current = current->prox;
       continue;
@@ -779,28 +838,29 @@ int VerificaSintaxeEhValida(TokenNode *head) {
         }
       } else if (strcmp(token, "se") == 0 || strcmp(token, "senao") == 0 ||
                  strcmp(token, "para") == 0) {
-        int num_linha = current->linha;
-        TokenNode *currentAux = current->prox;
+                int num_linha = current->linha;
+                TokenNode *currentAux = current->prox;
 
-        // percorrer todos os tokens da linha
-        while (currentAux && currentAux->linha == num_linha &&
-               currentAux != NULL) {
-          // se encontro um { na mesma linha que a palavra reservada, entao
-          // adiciono um na flag para indicar que o proximo } nao deve alterar o
-          // escopo
-          if (strcmp(currentAux->token, "{") == 0) {
-            flag_escopo_palavra_reservada++;
-            currentAux = NULL;
-          }
-          currentAux = currentAux->prox;
-        }
-        if (strcmp(token, "se") == 0) {
-          verificaSe(current);
-        }
+              // percorrer todos os tokens da linha
+              while (currentAux && currentAux->linha == num_linha && currentAux != NULL) {
+                // se encontro um { na mesma linha que a palavra reservada, entao
+                // adiciono um na flag para indicar que o proximo } nao deve alterar o
+                // escopo
+                if (strcmp(currentAux->token, "{") == 0) {
+                  flag_escopo_palavra_reservada++;
+                  currentAux = NULL;
+                }
+                currentAux = currentAux->prox;
+              }
+              if (strcmp(token, "se") == 0) {
+                verificaSe(current);
+              }
 
       }else  if (strcmp(token, "leia") == 0){
       verificaLeia(current);
-      }
+      }else  if (strcmp(token, "escreva") == 0){
+              verificaEscreva(current);
+              }
     } else if (ehTipoDeDado(token)) {
       strcpy(tipo_atual, token);
       processarDeclaracao(current, tipo_atual, escopo_atual);

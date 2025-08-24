@@ -1,6 +1,7 @@
 
 Analise  Sintática:
 
+- Ao passar por uma variavel ele olha se ela já foi declarada, independente se ela ta dentro do se, para, leia ou escreva.
 - Struct com token e linha e ponteiro pra proxima posicao - Ok
 - Deve existir exatamente um principal(). - Ok
 
@@ -11,9 +12,14 @@ Analise  Sintática:
 - verificar lexica - ok
 
 - Verificação da escrita dos comandos:
-  leia(...) → variáveis já declaradas, separadas por vírgula.
-  escreva(...) → pode misturar texto (entre aspas) e variáveis, separados por vírgula.
-  se (...) → teste válido, depois bloco ou comando único; senao opcional.
+  leia(...) → variáveis já declaradas, separadas por vírgula. -ok
+
+  escreva(...) → pode misturar texto (entre aspas) e variáveis, separados por vírgula. - OK
+
+  se (...) → teste válido, depois bloco ou comando único; senao opcional. - Verifiquei o que está dentro do se(), verifica se não tem declaração de variavel dentro do se ou senao, falta verificar a se o 'se' é multilinha ou não
+
+
+ 
   para (...) → exatamente três expressões separadas por ;.
   
 - Sem espaços proibidos (ex.: não pode ter = <).
