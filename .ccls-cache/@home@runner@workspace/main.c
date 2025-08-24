@@ -245,6 +245,7 @@ bool ehBlocoMultilinha(const TokenNode *tk) {
     if (!tk) return false;
     return strcmp(tk->token, "{") == 0;
 }
+
 int verificaSe(const TokenNode *tk) {
     // 1) confere se é "se"
     if (!tk || strcmp(tk->token, "se") != 0) {
@@ -346,9 +347,6 @@ int verificaSe(const TokenNode *tk) {
     return 1; // passou por tudo
 }
 
-
-
-
 int ehMarcador(const char *token) {
   for (int i = 0; i < sizeof(marcadores) / sizeof(marcadores[0]); i++)
     if (strcmp(token, marcadores[i]) == 0)
@@ -378,6 +376,7 @@ char* getNomeBase(const char *token) {
 
     return base; // quem chamar deve liberar a memória depois
 }
+
 Simbolo *buscarSimbolo(Simbolo *tabela, const char *nome, const char *funcao) {
   Simbolo *atual = tabela;
   char nomeBase [50] ;
@@ -593,117 +592,126 @@ void tokenizeLine(const char *line, int num_linha) {
 }
 
 TokenNode *tokenizeFile(const char *filename, int *num_tokens_ret) {
-  FILE *file = fopen(filename, "r");
-  if (!file) {
-    perror("Erro ao abrir arquivo");
-    return NULL;
-  }
-  char line[1024];
-  int linha = 1;
-  while (fgets(line, sizeof(line), file))
-    tokenizeLine(line, linha++);
-  fclose(file);
-  *num_tokens_ret = tokenCount;
-  return token_list;
-}
+      FILE *file = fopen(filename, "r");
+      if (!file) {
+        perror("Erro ao abrir arquivo");
+        return NULL;
+      }
+      char line[1024];
+      int linha = 1;
+      while (fgets(line, sizeof(line), file))
+        tokenizeLine(line, linha++);
+      fclose(file);
+      *num_tokens_ret = tokenCount;
+      return token_list;
+    }
 
 void freeTokenList(TokenNode *head) {
-  while (head) {
-    TokenNode *tmp = head;
-    head = head->prox;
-    LiberaMallocELiberaMemoria(tmp->token, strlen(tmp->token) + 1);
-    LiberaMallocELiberaMemoria(tmp, sizeof(TokenNode));
-  }
-}
-
-// Função de processamento de declaração
-int processarDeclaracao(TokenNode *token, char *tipo_atual,
-                        char *escopo_atual) {
-  if (!token || !token->prox)
-    return 0;
-
-  // Pega o nome da variável (token seguinte ao tipo)
-  if (ehVariavel(token->prox->token)) {
-    strcpy(nome_atual, token->prox->token);
-    // printf("nome atual = %s\n", nome_atual);
-  } else {
-    return 0;
-  }
-
-  TokenNode *atual = token->prox->prox;
-
-  // Verifica se é um array (ex: car[2.5])
-  if (atual && ehMarcador(atual->token) && strcmp(atual->token, "[") == 0) {
-    strcat(nome_atual, "[");
-    atual = atual->prox;
-
-    // pega o que está entre os colchetes
-    if (ehNumero(atual->token)) {
-      strcat(nome_atual, atual->token);
-      atual = atual->prox;
-      if (atual && ehMarcador(atual->token) && strcmp(atual->token, "]") == 0) {
-        strcat(nome_atual, "]");
+      while (head) {
+        TokenNode *tmp = head;
+        head = head->prox;
+        LiberaMallocELiberaMemoria(tmp->token, strlen(tmp->token) + 1);
+        LiberaMallocELiberaMemoria(tmp, sizeof(TokenNode));
       }
-      atual = atual->prox;
-    } else {
-      printf(
-          "-={********************************************************}=-\n");
-      printf("ERRO: Array '%s' não é um número - LINHA %d\n", atual->token,
-             atual->linha);
-      exit(1);
     }
 
-    /*
-    while (atual && strcmp(atual->token, "]") != 0) {
-      strcat(nome_atual, atual->token);
-      atual = atual->prox;
+    // Função de processamento de declaração
+int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual) {
+      if (!token || !token->prox)
+        return 0;
+
+      // Pega o nome da variável (token seguinte ao tipo)
+      if (ehVariavel(token->prox->token)) {
+        strcpy(nome_atual, token->prox->token);
+        // printf("nome atual = %s\n", nome_atual);
+      } else {
+        return 0;
+      }
+
+      TokenNode *atual = token->prox->prox;
+
+      // Verifica se é um array (ex: car[2.5])
+      if (atual && ehMarcador(atual->token) && strcmp(atual->token, "[") == 0) {
+        strcat(nome_atual, "[");
+        atual = atual->prox;
+
+        // pega o que está entre os colchetes
+        if (ehNumero(atual->token)) {
+          strcat(nome_atual, atual->token);
+          atual = atual->prox;
+          if (atual && ehMarcador(atual->token) && strcmp(atual->token, "]") == 0) {
+            strcat(nome_atual, "]");
+          }
+          atual = atual->prox;
+        } else {
+          printf(
+              "-={********************************************************}=-\n");
+          printf("ERRO: Array '%s' não é um número - LINHA %d\n", atual->token,
+                 atual->linha);
+          exit(1);
+        }
+
+        /*
+        while (atual && strcmp(atual->token, "]") != 0) {
+          strcat(nome_atual, atual->token);
+          atual = atual->prox;
+        }
+
+        if (atual && strcmp(atual->token, "]") == 0 && atual) {
+          strcat(nome_atual, "]");
+          atual = atual->prox; // Avança além do colchete
+        }*/
+      }
+
+      // Verifica se há um operador "=" após o nome
+      if (atual && ehOperador(atual) && strcmp(atual->token, "=") == 0) {
+        // printf("eh operador = %s\n", atual->token);
+
+        atual = atual->prox;
+        if (atual)
+          strcpy(valor_atual, atual->token);
+
+        atual = atual->prox;
+        while (atual && !ehMarcador(atual->token)) {
+          strcat(valor_atual, atual->token);
+          atual = atual->prox;
+        }
+
+        // rintf("valoooor atual = %s\n", valor_atual);
+        tabela_simbolos = adicionarSimbolo(tabela_simbolos, tipo_atual, nome_atual,
+                                           valor_atual, escopo_atual);
+        // printf("adicionado na tabela de simbolos\n");
+
+        return 1; // consumiu até o valor
+      }
+      // Caso seja declaração sem inicialização
+      else if (atual && ehMarcador(atual->token)) {
+        // printf("token marcador = %s\n", atual->token);
+
+        tabela_simbolos = adicionarSimbolo(tabela_simbolos, tipo_atual, nome_atual,
+                                           "", escopo_atual);
+        // printf("adicionado na tabela de simbolos sem valor\n");
+
+        // verifica se tem vírgula e continua declarando
+        if (strcmp(atual->token, ",") == 0) {
+          //printf("token virgula = %s\n", atual->prox->token);
+          if(ehTipoDeDado(atual->prox->token)!=0){//se o proximo token for um tipo de dado, é um erro
+            printf("-={********************************************************}="
+       "-\n");
+            printf("ERRO Sintático: Não se pode declarar dois tipos de dados na mesma linha - '%s' não pode ser declarada - LINHA %d\n", atual->prox->token,
+                 atual->linha);
+            printf("-={********************************************************}="
+               "-\n");
+            exit(1);
+          }
+          // printf("tem virgula\n");
+          processarDeclaracao(atual, tipo_atual, escopo_atual);
+        }
+        return 1;
+      }
+
+      return 0;
     }
-
-    if (atual && strcmp(atual->token, "]") == 0 && atual) {
-      strcat(nome_atual, "]");
-      atual = atual->prox; // Avança além do colchete
-    }*/
-  }
-
-  // Verifica se há um operador "=" após o nome
-  if (atual && ehOperador(atual) && strcmp(atual->token, "=") == 0) {
-    // printf("eh operador = %s\n", atual->token);
-
-    atual = atual->prox;
-    if (atual)
-      strcpy(valor_atual, atual->token);
-
-    atual = atual->prox;
-    while (atual && !ehMarcador(atual->token)) {
-      strcat(valor_atual, atual->token);
-      atual = atual->prox;
-    }
-
-    // rintf("valoooor atual = %s\n", valor_atual);
-    tabela_simbolos = adicionarSimbolo(tabela_simbolos, tipo_atual, nome_atual,
-                                       valor_atual, escopo_atual);
-    // printf("adicionado na tabela de simbolos\n");
-
-    return 1; // consumiu até o valor
-  }
-  // Caso seja declaração sem inicialização
-  else if (atual && ehMarcador(atual->token)) {
-    // printf("token marcador = %s\n", atual->token);
-
-    tabela_simbolos = adicionarSimbolo(tabela_simbolos, tipo_atual, nome_atual,
-                                       "", escopo_atual);
-    // printf("adicionado na tabela de simbolos sem valor\n");
-
-    // verifica se tem vírgula e continua declarando
-    if (strcmp(atual->token, ",") == 0) {
-      // printf("tem virgula\n");
-      processarDeclaracao(atual, tipo_atual, escopo_atual);
-    }
-    return 1;
-  }
-
-  return 0;
-}
 
 void verificaLeia(TokenNode *token){
   TokenNode *prox = token->prox->prox;
