@@ -15,12 +15,13 @@ se (!a <= !b2)
   
  }
  !a =5;
+ !cc[2.5] = 1;
 }
 decimal !ff[5.5] = 2.5;
 funcao __printa {
-    texto !msg = "Estou na funacao printa!";
+    texto !msg[5] = "Estou na funacao printa!";
+  
 }
 
 decimal !zzf[5.5];
-
 

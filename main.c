@@ -354,6 +354,7 @@ int ehMarcador(const char *token) {
   return 0;
 }
 
+
 // Função que retorna o nome base da variável (antes do '[')
 char* getNomeBase(const char *token) {
     int len = 0;
@@ -378,31 +379,36 @@ char* getNomeBase(const char *token) {
 }
 
 Simbolo *buscarSimbolo(Simbolo *tabela, const char *nome, const char *funcao) {
-  Simbolo *atual = tabela;
+  Simbolo *atual = tabela_simbolos;
   char nomeBase [50] ;
   while (atual != NULL) {
     //pega só o nome da várivel sem o tamanho do array para decimal
-    if(strcmp(atual->tipo, "decimal") == 0 ){
+    if(strcmp(atual->tipo, "decimal") == 0 || strcmp(atual->tipo, "texto") == 0 ){
       strcpy(nomeBase, getNomeBase(atual->nome));
     }
     //pego o nome normal
-    if(strcmp(atual->tipo, "decimal") != 0 ){
+    if(strcmp(atual->tipo, "decimal") != 0 && strcmp(atual->tipo, "texto") != 0){
       strcpy(nomeBase, getNomeBase(atual->nome));
     }
-    if (strcmp(nomeBase, nome) == 0 && strcmp(atual->escopo, funcao) == 0) {
+    //printf("Nome base: %s  - nome passado %s\n", nomeBase, getNomeBase(nome));
+    //printf("Escopo tabela: %s  - escopo passado %s\n", atual->escopo, funcao);
+    if (strcmp(nomeBase,  getNomeBase(nome)) == 0 && strcmp(atual->escopo, funcao) == 0) {
+      //printf("IGUALLL \n");
       return atual; // Encontrou
     }
     atual = atual->prox;
   }
   return NULL; // Não existe
 }
+
+
 // Funções da tabela de símbolos
 Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
                           const char *valor, const char *funcao) {
   // Verifica se já existe
-  // printf("Adicionando '%s' '%s' '%s' '%s'\n", tipo, nome, valor, funcao);
+ //printf("Adicionando '%s' '%s' '%s' '%s'\n", tipo, nome, valor, funcao);
   Simbolo *existe = buscarSimbolo(inicio, nome, funcao);
-
+//printf("Existe '%s' '%s' '%s' '%s'\n", tipo, nome, valor, funcao);
   if (existe != NULL) {
     if (strlen(tipo) > 0) {
       // Tentando redeclarar -> ERRO
@@ -412,6 +418,7 @@ Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
              funcao);
       printf(
           "-={********************************************************}=-\n");
+      exit(1);
     }
     return existe;
   }
@@ -438,10 +445,21 @@ Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
   temp->prox = novo;
   return inicio;
 }
+void imprimirTabela(Simbolo *inicio) {
+  printf("\n%-10s %-15s %-15s %-20s\n", "Tipo", "Nome", "Valor", "Função");
+  printf("-------------------------------------------------------------\n");
+  while (inicio) {
+    printf("%-10s %-15s %-15s %-20s\n", inicio->tipo, inicio->nome,
+           inicio->valor, inicio->escopo);
+    inicio = inicio->prox;
+  }
+}
 // Atribuir valor a variavel
 Simbolo *atribuirValor(Simbolo *inicio, const char *nome, const char *valor,
                        const char *funcao) {
   // Verifica se já existe
+  //imprimirTabela(tabela_simbolos);
+  //printf("Atribuindo '%s' '%s' '%s'\n", nome, valor, funcao);
   Simbolo *existe = buscarSimbolo(inicio, nome, funcao);
 
   if (existe != NULL) {
@@ -462,15 +480,7 @@ Simbolo *atribuirValor(Simbolo *inicio, const char *nome, const char *valor,
   }
 }
 
-void imprimirTabela(Simbolo *inicio) {
-  printf("\n%-10s %-15s %-15s %-20s\n", "Tipo", "Nome", "Valor", "Função");
-  printf("-------------------------------------------------------------\n");
-  while (inicio) {
-    printf("%-10s %-15s %-15s %-20s\n", inicio->tipo, inicio->nome,
-           inicio->valor, inicio->escopo);
-    inicio = inicio->prox;
-  }
-}
+
 
 // Lista encadeada de tokens
 void addTokenToList(const char *token, int linha) {
@@ -617,13 +627,14 @@ void freeTokenList(TokenNode *head) {
 
     // Função de processamento de declaração
 int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual) {
+  //printf("nome processado = %s\n", token->token);
       if (!token || !token->prox)
         return 0;
 
       // Pega o nome da variável (token seguinte ao tipo)
       if (ehVariavel(token->prox->token)) {
         strcpy(nome_atual, token->prox->token);
-        // printf("nome atual = %s\n", nome_atual);
+       // printf("nome atual = %s\n", nome_atual);
       } else {
         return 0;
       }
@@ -665,7 +676,7 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual) 
 
       // Verifica se há um operador "=" após o nome
       if (atual && ehOperador(atual) && strcmp(atual->token, "=") == 0) {
-        // printf("eh operador = %s\n", atual->token);
+         //printf("eh operador = %s\n", atual->token);
 
         atual = atual->prox;
         if (atual)
@@ -677,10 +688,10 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual) 
           atual = atual->prox;
         }
 
-        // rintf("valoooor atual = %s\n", valor_atual);
+        //printf("valoooor atual = %s\n", valor_atual);
         tabela_simbolos = adicionarSimbolo(tabela_simbolos, tipo_atual, nome_atual,
                                            valor_atual, escopo_atual);
-        // printf("adicionado na tabela de simbolos\n");
+       //printf("adicionado na tabela de simbolos\n");
 
         return 1; // consumiu até o valor
       }
@@ -690,11 +701,11 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual) 
 
         tabela_simbolos = adicionarSimbolo(tabela_simbolos, tipo_atual, nome_atual,
                                            "", escopo_atual);
-        // printf("adicionado na tabela de simbolos sem valor\n");
+         //printf("adicionado na tabela de simbolos sem valor\n");
 
         // verifica se tem vírgula e continua declarando
         if (strcmp(atual->token, ",") == 0) {
-          //printf("token virgula = %s\n", atual->prox->token);
+         // printf("token virgula = %s\n", atual->prox->token);
           if(ehTipoDeDado(atual->prox->token)!=0){//se o proximo token for um tipo de dado, é um erro
             printf("-={********************************************************}="
        "-\n");
@@ -704,8 +715,9 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual) 
                "-\n");
             exit(1);
           }
-          // printf("tem virgula\n");
-          processarDeclaracao(atual, tipo_atual, escopo_atual);
+           //printf("tem virgula\n");
+          //printf("Token apos , %s\n", atual->token);
+          return processarDeclaracao(atual, tipo_atual, escopo_atual);
         }
         return 1;
       }
@@ -763,7 +775,7 @@ void verificaEscreva(TokenNode *token){
   if(prox->token == NULL){
     printf("-={********************************************************}="
        "-\n");
-    printf("ERRO Sintático: Comando 'excreva' sem variável ou texto - LINHA %d\n", prox->linha);
+    printf("ERRO Sintático: Comando 'escreva' sem variável ou texto - LINHA %d\n", prox->linha);
     printf("-={********************************************************}="
        "-\n");
     exit(1);
@@ -877,8 +889,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
     } else if (ehVariavel(token)) {
       // se o proximo token for um operador de atribuição , eu pego o valor e
       // atribuo a variavel
-      if (current->prox && ehOperador(current->prox) &&
-          strcmp(current->prox->token, "=") == 0) {
+      if (current->prox && ehOperador(current->prox) && strcmp(current->prox->token, "=") == 0) {
         strcpy(nome_atual, token); // nome da variável
 
         valor_atual[0] = '\0'; // limpa buffer
@@ -891,8 +902,26 @@ int VerificaSintaxeEhValida(TokenNode *head) {
           tmp = tmp->prox;
         }
 
+       atribuirValor(tabela_simbolos, nome_atual, valor_atual, escopo_atual);
+      }else if (current->prox && ehMarcador(current->prox->token) && strcmp(current->prox->token, "[") == 0 && strcmp(current->prox->prox->prox->prox->token, "=") == 0){
+       
+        strcpy(nome_atual, token); // nome da variável
+        TokenNode *tmpNome = current->prox;
+        
+        while (tmpNome &&  strcmp(tmpNome->token, "]") != 0){
+          tmpNome = tmpNome->prox;
+        }
+        //printf("TmpNome: %s - Linha: %d\n", tmpNome->token, tmpNome->linha);
+        valor_atual[0] = '\0'; // limpa buffer
+        TokenNode *tmpAtribuiValor = tmpNome->prox;
+        //printf("tmpAtribuiValor: %s - Linha: %d\n",tmpAtribuiValor->token, tmpAtribuiValor->linha);
+        if(tmpAtribuiValor && ehOperador(tmpAtribuiValor) && strcmp(tmpAtribuiValor->token, "=") == 0){
+           strcpy(valor_atual, tmpAtribuiValor->prox->token);
+        }
+        
+        //imprimirTabela(tabela_simbolos);
         atribuirValor(tabela_simbolos, nome_atual, valor_atual, escopo_atual);
-      }
+      }/*
       //verifica se a variavel existe na tabela de simbolos
       if (buscarSimbolo(tabela_simbolos, token, escopo_atual) == NULL){
          printf("-={********************************************************}="
@@ -902,7 +931,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
         printf("-={********************************************************}="
                  "-\n");
         exit(1);
-      }
+      }*/
 
     } else if (ehMarcador(token) && strcmp(token, "}") == 0) {
       if (flag_escopo_palavra_reservada < 0) {
