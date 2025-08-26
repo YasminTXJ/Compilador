@@ -1030,11 +1030,47 @@ int verificarBalanceamento(TokenNode *token_list) {
   return 1; // OK se não houve erro
 }
 
+int VerificaSeTemPontoVirgulaNoFimdaLinha(TokenNode *token_list) {
+    TokenNode *current = token_list;
+
+    while (current != NULL) {
+        TokenNode *linhaInicio = current;
+        TokenNode *anterior = current;
+
+        // anda até o fim da linha
+        while (current->prox && current->prox->linha == linhaInicio->linha) {
+            anterior = current;
+            current = current->prox;
+        }
+
+        // agora "current" é o último token da linha
+        // e "anterior" é o penúltimo
+        if (strcmp(linhaInicio->token, "principal") != 0 &&
+            strcmp(linhaInicio->token, "se") != 0 &&
+            strcmp(linhaInicio->token, "senao") != 0 &&
+            strcmp(linhaInicio->token, "para") != 0 &&
+            strcmp(linhaInicio->token, "funcao") != 0 &&
+            strcmp(linhaInicio->token, "}") != 0) {
+
+            if (strcmp(current->token, ";") != 0) {
+                printf("-={********************************************************}=-\n");
+                printf("ERRO: Sintaxe invalida  - LINHA %d  (faltando ';')\n",
+                       current->linha);
+                printf("-={********************************************************}=-\n");
+                exit(1);
+            }
+        }
+
+        current = current->prox; // vai pra próxima linha
+    }
+
+    return 0;
+}
 // Main
 int main() {
   int numTokens;
   TokenNode *resultado = tokenizeFile("Codigo1.txt", &numTokens);
-
+if(VerificaSeTemPontoVirgulaNoFimdaLinha(resultado)==0){
   if (verificarBalanceamento(resultado)) {
     if (VerificaSintaxeEhValida(resultado)) {
       printf(
@@ -1046,6 +1082,8 @@ int main() {
     }
   }
 
+}
+  
   printf("\n[Informacoes]\nTokens encontrados: %d\n", numTokens);
 
   freeTokenList(resultado);
