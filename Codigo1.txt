@@ -1,4 +1,5 @@
-principal(){
+principal()
+{
 inteiro !a , !b2 = 70000000;
 inteiro !x = 5;
 decimal !cc[2.5];

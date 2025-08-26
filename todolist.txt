@@ -4,29 +4,18 @@ Analise  Sintática:
 - Ao passar por uma variavel ele olha se ela já foi declarada, independente se ela ta dentro do se, para, leia ou escreva. - OK
 - Struct com token e linha e ponteiro pra proxima posicao - OK
 - Deve existir exatamente um principal(). - OK
-
 - Verificar duplo balanceamento: parâmetros e delimitadores ( ) e { } e []. - OK
-
-- Construção da tabela de símbolos - Falta adicionar as funcoes
-
+- Sem espaços proibidos (ex.: não pode ter = <). - OK
 - verificar lexica - OK
-
 - Verificação da escrita dos comandos:
   leia(...) → variáveis já declaradas, separadas por vírgula. - OK
-
   escreva(...) → pode misturar texto (entre aspas) e variáveis, separados por vírgula. - OK
 
   se (...) → teste válido, depois bloco ou comando único; senao opcional. - Verifiquei o que está dentro do se(), verifica se não tem declaração de variavel dentro do se ou senao, falta verificar a se o 'se' é multilinha ou não
 
   para (...) → exatamente três expressões separadas por ;.
 
-  
-  
-- Sem espaços proibidos (ex.: não pode ter = <). - OK
-
-
-
-
+  - Construção da tabela de símbolos - Falta adicionar as funcoes - Ok
 
 - Trate erros sintáticos:
 Se a ordem ou formato estiver errado, interromper a execução e informar:
@@ -35,9 +24,86 @@ Número da linha.
 
 Mensagem clara do erro.
 
-- Tratar a parte semântica:
-  - Verificar se o valor atribuido a variavel é compativél com o tipo
 
 
-   escreva("Escreva um número" ); 
-   
+
+################################################################################
+
+Semântica:
+
+- Ao declarar variável → verificar se já existe no mesmo escopo.  - OK
+- Comando leia
+  • Variáveis devem ter sido declaradas. - OK
+  • Não pode haver declaração dentro do leia -OK
+  • Podem ser de tipos diferentes, mas todos já declarados - OK
+- Comando escreva
+  • Pode escrever variáveis já declaradas. -OK
+  • Pode escrever texto (entre ""). -OK
+  • Se misturar → precisa de vírgula entre eles -OK
+  • Não pode haver declaração dentro do escreva -OK
+
+- Verificar compatibilidade de tipos:
+        ◦ inteiro ← inteiro 
+        ◦ decimal ← inteiro ou decimal 
+        ◦ texto ← só strings entre "" 
+- Variável só pode receber valor dentro do escopo válido - Acho que já é verificado pois quando ve se existe ela compara o escopo
+- texto → deve ter [tamanho].
+- decimal → deve ter [antes.depois].
+- Funções também entram na tabela (com tipo de retorno e parâmetros)
+- Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. 
+- Expressões matemática  Se mistura de tipos (inteiro + decimal) → permitido, mas emitir alerta.
+
+- Expressões Relacionais
+    • Comparações só podem ocorrer com variáveis ou valores compatíveis.
+    • texto só pode usar == ou <>.
+    • inteiro e decimal podem usar todos (<, <=, >, >=, ==, <>).
+    • Comparação entre tipos diferentes → alerta semântico.
+  
+- Operadores Lógicos
+    • && e || só podem juntar expressões relacionais.
+    • Verificar se ambos lados são booleanos (resultados de comparações).
+    • Se usado sobre valores não relacionais → alerta.
+
+- Comando se / senao
+    • Condição precisa ser uma expressão relacional válida.
+    • Tipos dentro da condição precisam ser compatíveis.
+    • Bloco não pode conter declaração de variáveis.
+    • Pode conter qualquer outro comando válido.
+    • senao é opcional.
+
+- Comando para
+    • Estrutura para(x1; x2; x3):
+        ◦ x1 → inicialização (atribuição em variável já declarada)
+        ◦ x2 → condição (expressão relacional válida)
+        ◦ x3 → operação matemática sobre a variável de controle
+    • Variável já deve estar declarada.
+    • Tipos devem ser compatíveis em cada parte.
+
+- Funções
+    • Só pode haver um principal() - OK
+    • principal() não pode ter parâmetros.
+    • funcao precisa ter:
+        ◦ Nome com __ seguido de letra/número.
+        ◦ Lista de parâmetros com tipo + nome.
+        ◦ retorno obrigatório.
+    • Dentro dos parênteses pode conter parâmetros; 
+    • Se ocorrerem, devem ser informados tipo de dados e nome da variável; 
+    • Os parâmetros não devem ser declarados dentro da funçao; 
+    • Não existe limitação de quantidade de parâmetros na funcao(), porém se houver mais de 01 (um) deverão ser separados por vírgula (somente 
+    uma); 
+    • Uma função deve apresentar um retorno; 
+    • Poderá haver função sem chamada; 
+    • Se a funcao não for inserida antes do principal(), e for chamada no contexto do principal(), deve-se procurá-la em todo o arquivo, e validar a 
+    funcao() antes de continuar a validação do principal();
+    • Se função chamada não existe → alerta semântico.
+    • Se parâmetros não batem em número ou tipo → alerta semântico.
+
+
+Alertas Semânticos (não interrompem execução)
+• Uso de variável sem declaração.
+• Uso de variável fora do escopo.
+• Atribuição com tipos diferentes.
+• Comparação entre tipos diferentes.
+• Chamada de função inexistente.
+• Chamada de função com parâmetros incorretos.
+• Memória usada entre 90–99%.
