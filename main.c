@@ -696,6 +696,193 @@ void verificaEscreva(TokenNode *token) {
     exit(1);
   }
 }
+TokenNode *verificaParDeExpressaoPara(TokenNode *tk) {
+  TokenNode *expr = tk;
+  if (!expr) {
+    printf("ERRO SINTÁTICO: condição vazia no 'para' - LINHA %d\n", tk->linha);
+    exit(1);
+  }
+  // operando 1
+  //printf("Operando 1 do para: %s - Linha: %d\n", expr->token, expr->linha);
+  if (!(ehVariavel(expr->token) || ehNumero(expr->token) ||
+        ehString(expr->token))) {
+    printf("ERRO SINTÁTICO: condição inválida ('%s') - LINHA %d\n", expr->token,
+           expr->linha);
+    exit(1);
+  }
+  // operador
+  TokenNode *op = expr->prox;
+ // printf("Operando 1: %s  \n", op->token);
+  if (!op || !ehOperador(op)) {
+    printf("ERRO SINTÁTICO: esperado operador após '%s' - LINHA %d\n",
+           expr->token, expr->linha);
+    exit(1);
+  }
+  // checagem semântica de operadores (6.5 + 3.2.3 + 3.2.4)
+  if (strcmp(op->token, "=<") == 0 || strcmp(op->token, "=>") == 0 ||
+      strcmp(op->token, "><") == 0 || strcmp(op->token, "!=") == 0 ||
+      strcmp(op->token, "<<") == 0 || strcmp(op->token, ">>") == 0) {
+    printf("ERRO SEMÂNTICO: operador inválido '%s' - LINHA %d\n", op->token,
+           op->linha);
+    exit(1);
+  }
+  if (ehOperador(op) && ehOperador(op->prox)) {
+    printf("ERRO SEMÂNTICO: operadores duplicados na condição do 'se' - LINHA "
+           "%d\n",
+           op->linha);
+    exit(1);
+  }
+  // operando 2
+  TokenNode *expr2 = op->prox;
+  // printf("Exp2 2: %s  \n", expr2->token);
+  if (!expr2 || !(ehVariavel(expr2->token) || ehNumero(expr2->token) ||
+                  ehString(expr2->token))) {
+    printf("ERRO SINTÁTICO: esperado operando após operador '%s' - LINHA %d\n",
+           op->token, op->linha);
+    exit(1);
+  }
+  // restrição: texto só pode usar == ou <>
+  if ((ehString(expr->token) || ehString(expr2->token)) &&
+      (strcmp(op->token, "<") == 0 || strcmp(op->token, "<=") == 0 ||
+       strcmp(op->token, ">") == 0 || strcmp(op->token, ">=") == 0)) {
+    printf("ERRO SEMÂNTICO: operador '%s' inválido para texto - LINHA %d\n",
+           op->token, op->linha);
+    exit(1);
+  }else{
+     return(expr2);
+  }
+
+  printf("erro ao validar expressão do se Linha : %d\n", tk->linha);
+  exit(1);
+}
+
+
+TokenNode *verificaPara(TokenNode *tk) {
+    // 1) confere se é "para"// vai vir de fora
+ // printf("Token: %s - Linha: %d\n", tk->token, tk->linha);   
+    if (!tk || strcmp(tk->token, "para") != 0) {
+        printf("ERRO SINTÁTICO: esperado 'para' - LINHA %d\n", tk->linha);
+        exit(1);
+    }
+
+    // 2) precisa ter "(" logo após
+    //printf("Token PROX: %s - Linha: %d\n", tk->prox->token, tk->prox->linha);
+    if (!tk->prox || strcmp(tk->prox->token, "(") != 0) {
+        printf("ERRO SINTÁTICO: esperado '(' após 'para' - LINHA %d\n", tk->linha);
+        exit(1);
+    }
+
+    TokenNode *expr = tk->prox->prox;
+   //printf("Token prox prox : %s - Linha: %d\n", expr->token, expr->linha);  
+     //pego o primeiro token depois da virgula
+
+    // -------- X1: inicialização --------
+     //verifica se já foi declarado
+     if(buscarSimbolo(tabela_simbolos, expr->token, escopo_atual) == NULL){
+        printf("ERRO SEMÂNTICO: variável '%s' não declarada no 'para' - LINHA %d\n", expr->token, expr->linha);
+        exit(1);
+     }
+
+    // pode ser vazio (quando vem direto um ";")
+    if (strcmp(expr->token, ";") != 0) {
+        while (expr && strcmp(expr->token, ";") != 0) {
+            if (!ehVariavel(expr->token) && strcmp(expr->token, "=") != 0 &&
+                !ehNumero(expr->token) && strcmp(expr->token, ",") != 0) {
+                printf("ERRO SINTÁTICO: inicialização inválida em 'para' - LINHA %d\n", expr->linha);
+                exit(1);
+            }
+            expr = expr->prox;
+        }
+    }
+    //printf("Token que deveria ser ; = %s - Linha: %d\n", expr->token, expr->linha);
+    if (!expr || strcmp(expr->token, ";") != 0) {
+        printf("ERRO SINTÁTICO: esperado ';' após inicialização no 'para' - LINHA %d\n", expr ? expr->linha : tk->linha);
+        exit(1);
+    }
+    expr = expr->prox;
+  // -------- X2: condição --------
+   // printf("Inicio da condição  = %s - Linha: %d\n", expr->token, expr->linha);
+    //verifica se já foi declarado
+     if(ehVariavel(expr->token)){
+       if(buscarSimbolo(tabela_simbolos, expr->token, escopo_atual) == NULL){
+           printf("ERRO SEMÂNTICO: variável '%s' não declarada no 'para' - LINHA %d\n", expr->token, expr->linha);
+           exit(1);
+        }
+     }else{
+       printf("ERRO SINTÁTICO: condição vazia no 'para' - LINHA %d\n", expr->linha);
+       exit(1);
+     }
+
+
+    if (strcmp(expr->token, ";") != 0 ) {
+        expr = verificaParDeExpressaoPara(expr);
+    } else {
+        printf("ERRO SINTÁTICO: condição vazia no 'para' - LINHA %d\n", expr->linha);
+        exit(1);
+    }
+  expr = expr->prox;
+    if (!expr || strcmp(expr->token, ";") != 0) {
+        printf("ERRO SINTÁTICO: esperado ';' após condição no 'para' - LINHA %d\n", expr ? expr->linha : tk->linha);
+        exit(1);
+    }
+    expr = expr->prox;
+
+    // -------- X3: incremento --------
+    //printf("Inicio do incremento  = %s - Linha: %d\n", expr->token, expr->linha);
+    if (strcmp(expr->token, ")") != 0) {
+        while (expr && strcmp(expr->token, ")") != 0) {
+          //printf("EXPRESSAO: %s - LINHA: %d\n", expr->token, expr->linha);
+            if (!(ehVariavel(expr->token) || ehNumero(expr->token) ||
+                  strcmp(expr->token, "+") == 0 || strcmp(expr->token, "-") == 0 ||
+                  ehOperador(expr))) {
+                printf("ERRO SINTÁTICO: incremento inválido em 'para' - LINHA %d\n", expr->linha);
+                exit(1);
+            }
+          if(ehVariavel(expr->token)){
+                if(buscarSimbolo(tabela_simbolos, expr->token, escopo_atual) == NULL){
+                    printf("ERRO SEMÂNTICO: variável '%s' não declarada no 'para' - LINHA %d\n", expr->token, expr->linha);
+                    exit(1);
+                }
+          }
+            expr = expr->prox;
+        }
+    }else{
+        printf("ERRO SINTÁTICO: incremento vazio no 'para' - LINHA %d\n", expr->linha);
+        exit(1);
+    }
+    if (!expr || strcmp(expr->token, ")") != 0) {
+        printf("ERRO SINTÁTICO: esperado ')' após incremento no 'para' - LINHA %d\n", expr ? expr->linha : tk->linha);
+        exit(1);
+    }
+    TokenNode *tokenAposPara = expr;
+    expr = expr->prox;
+ // printf("Saindo do para  = %s - Linha: %d\n", expr->token, expr->linha);
+    // -------- Corpo do laço --------
+    if (!expr || strcmp(expr->prox->token, "}")==0) {
+        printf("ERRO SINTÁTICO: esperado corpo após 'para' - LINHA %d\n", tk->linha);
+        exit(1);
+    }
+    if (ehBlocoMultilinha(expr)) {
+        TokenNode *cur = expr->prox;
+        while (cur && strcmp(cur->token, "}") != 0) {
+            if (ehTipoDeDado(cur->token)) {
+                printf("ERRO SEMÂNTICO: declaração não permitida dentro do 'para' - LINHA %d\n", cur->linha);
+                exit(1);
+            }
+            if (strcmp(cur->token, "para") == 0) {
+                verificaPara(cur); // suporte a para aninhado
+            }
+            cur = cur->prox;
+        }
+        if (!cur) {
+            printf("ERRO SINTÁTICO: bloco do 'para' não fechado com '}' - LINHA %d\n", expr->linha);
+            exit(1);
+        }
+    } 
+    return tokenAposPara; // passou em tudo
+
+
+}
 // Verificação de sintaxe usando lista encadeada
 int VerificaSintaxeEhValida(TokenNode *head) {
 
@@ -746,7 +933,10 @@ int VerificaSintaxeEhValida(TokenNode *head) {
         if (strcmp(token, "se") == 0) {
           verificaSe(current);
         }
-
+        if(strcmp(token, "para") == 0){
+         // printf("Verificando para \n");
+          current = verificaPara(current);
+        }
       } else if (strcmp(token, "leia") == 0) {
         verificaLeia(current);
       } else if (strcmp(token, "escreva") == 0) {

@@ -12,7 +12,6 @@ se (!a <= !b2)
  senao escreva("B é maior", !a);
  para (!d = 1; !d<=100; !d=!d+2){
  escreva("D", !d);
-
   
  }
  !a =5;
