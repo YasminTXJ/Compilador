@@ -13,7 +13,7 @@ Analise  Sintática:
 
   se (...) → teste válido, depois bloco ou comando único; senao opcional. - Verifiquei o que está dentro do se(), verifica se não tem declaração de variavel dentro do se ou senao, falta verificar a se o 'se' é multilinha ou não
 
-  para (...) → exatamente três expressões separadas por ;.
+  para (...) → exatamente três expressões separadas por ; OK
 
   - Construção da tabela de símbolos - Falta adicionar as funcoes - Ok
 
@@ -74,10 +74,10 @@ Semântica:
 
 - Comando para
     • Estrutura para(x1; x2; x3):
-        ◦ x1 → inicialização (atribuição em variável já declarada)
-        ◦ x2 → condição (expressão relacional válida)
-        ◦ x3 → operação matemática sobre a variável de controle
-    • Variável já deve estar declarada.
+        ◦ x1 → inicialização (atribuição em variável já declarada) - OK
+        ◦ x2 → condição (expressão relacional válida) - OK
+        ◦ x3 → operação matemática sobre a variável de controle -OK
+    • Variável já deve estar declarada. - OK
     • Tipos devem ser compatíveis em cada parte.
 
 - Funções

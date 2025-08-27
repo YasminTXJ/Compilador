@@ -696,6 +696,7 @@ void verificaEscreva(TokenNode *token) {
     exit(1);
   }
 }
+
 TokenNode *verificaParDeExpressaoPara(TokenNode *tk) {
   TokenNode *expr = tk;
   if (!expr) {
@@ -912,6 +913,14 @@ int VerificaSintaxeEhValida(TokenNode *head) {
         } else {
           principalExiste = true;
           strcpy(escopo_atual, "principal");
+          if(strcmp(current->prox->token, "(") != 0 || strcmp(current->prox->prox->token, ")") != 0){
+            printf("-={********************************************************}="
+                 "-\n");
+            printf("Alerta Semântico: Função 'principal' não pode ter parametros - LINHA %d\n",
+                 current->linha);
+            printf("-={********************************************************}="
+                 "-\n");
+          }
         }
       } else if (strcmp(token, "se") == 0 || strcmp(token, "senao") == 0 ||
                  strcmp(token, "para") == 0) {
