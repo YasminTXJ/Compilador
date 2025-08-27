@@ -1,83 +1,13 @@
+#include "ArquivosH/globals.h"
+#include "ArquivosH/pilha.h"
+#include "ArquivosH/tabelaSimbolos.h"
+#include "ArquivosH/verificaSintaxe.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-// 0 falso
-#define MAX_TOKEN_SIZE 256
-#define MAX_LINE 1024
-#define KB 1024
-#define DEFAULT_MEMORY_LIMIT (2048 * KB)
 
-// Estrutura para lista encadeada de tokens
-typedef struct TokenNode {
-  char *token;
-  int linha;
-  struct TokenNode *prox;
-} TokenNode;
-
-// Estrutura da tabela de símbolos
-typedef struct Simbolo {
-  char tipo[20];
-  char nome[50];
-  char valor[100];
-  char escopo[50];
-  struct Simbolo *prox;
-} Simbolo;
-// pilha para verificar balanceamento de delimitadores
-typedef struct Pilha {
-  char simbolo; // delimitador
-  int linha;    // número da linha
-  struct Pilha *prox;
-} Pilha;
-
-// Tokens fixos
-const char *palavrasReservadas[] = {"principal", "funcao", "retorno", "leia",
-                                    "escreva",   "se",     "senao",   "para"};
-const char *tiposDeDados[] = {"inteiro", "texto", "decimal"};
-const char *operadores[] = {"==", "<>", "<=", ">=", "&&", "||", "+",
-                            "-",  "*",  "/",  "^",  "<",  ">",  "="};
-const char *marcadores[] = {"(", ")", "{", "}", "[", "]", ";", ",", " "};
-
-// Variáveis globais
-size_t total_memory_used = 0;
-size_t max_memory_used = 0;
-size_t memory_limit = DEFAULT_MEMORY_LIMIT;
-char escopo_atual[50] = "global";
-char funcao_anterior[50] = "global";
-char tipo_atual[20];
-char nome_atual[50];
-char valor_atual[100];
-
-TokenNode *token_list = NULL;
-TokenNode *token_list_tail = NULL;
-int tokenCount = 0;
-int flag_escopo_palavra_reservada = 0;
-Simbolo *tabela_simbolos = NULL;
-
-// Empilhar
-Pilha *push(Pilha *topo, char simbolo, int linha) {
-  Pilha *novo = (Pilha *)malloc(sizeof(Pilha));
-  novo->simbolo = simbolo;
-  novo->linha = linha;
-  novo->prox = topo;
-  return novo;
-}
-
-// Desempilhar
-Pilha *pop(Pilha *topo, char *simbolo, int *linha) {
-  if (topo == NULL)
-    return NULL;
-  *simbolo = topo->simbolo;
-  *linha = topo->linha;
-  Pilha *tmp = topo;
-  topo = topo->prox;
-  free(tmp);
-  return topo;
-}
-
-int isEmpty(Pilha *topo) { return topo == NULL; }
-bool pricipalExiste = false;
 // Funções de gerenciamento de memória
 void *verificaSeTemMemoriaDisponivelEFazOMalloc(size_t size) {
   if (total_memory_used + size > memory_limit) {
@@ -117,70 +47,6 @@ char *safe_strdup(const char *s) {
   char *dup = verificaSeTemMemoriaDisponivelEFazOMalloc(size);
   strcpy(dup, s);
   return dup;
-}
-
-int verificaAsciiValido(char c) { return (c >= 0 && c <= 127); }
-
-int ehPalavraReservada(const char *token) {
-  for (int i = 0;
-       i < sizeof(palavrasReservadas) / sizeof(palavrasReservadas[0]); i++)
-    if (strcmp(token, palavrasReservadas[i]) == 0)
-      return 1;
-  return 0;
-}
-
-int ehTipoDeDado(const char *token) {
-  for (int i = 0; i < sizeof(tiposDeDados) / sizeof(tiposDeDados[0]); i++)
-    if (strcmp(token, tiposDeDados[i]) == 0)
-      return 1;
-  return 0;
-}
-
-int ehString(const char *token) {
-  return (token[0] == '"' && token[strlen(token) - 1] == '"');
-}
-
-int ehFuncao(const char *token) { return (strncmp(token, "__", 2) == 0); }
-
-int VerificaSeNomeDeVarOuFuncEhValido(const char *token) {
-  for (int i = 0; token[i] != '\0'; i++)
-    if (!isalpha(token[i]) && !isdigit(token[i]))
-      return 0;
-  return 1;
-}
-
-int ehVariavel(const char *token) {
-  if (token[0] == '!' && islower(token[1])) {
-    if (strlen(token) > 2)
-      return VerificaSeNomeDeVarOuFuncEhValido(token + 2);
-    else
-      return 1;
-  }
-  return 0;
-}
-
-int ehNumero(const char *token) {
-  int ponto = 0;
-  for (int i = 0; token[i]; i++) {
-    if (token[i] == '.')
-      ponto++;
-    else if (!isdigit(token[i]))
-      return 0;
-  }
-  return ponto <= 1;
-}
-int ehOperador(const TokenNode *token) {
-  for (int i = 0; i < sizeof(operadores) / sizeof(operadores[0]); i++)
-    if (strcmp(token->token, operadores[i]) == 0) {
-      // TokenNode *proximo = token->prox;
-      // for (int j = 0; j < sizeof(operadores) / sizeof(operadores[0]); j++) {
-      //   if (proximo->token == operadores[j])
-      //     return 0;
-      // }
-      return 1;
-    }
-
-  return 0;
 }
 
 TokenNode *verificaParDeExpressao(TokenNode *tk) {
@@ -377,13 +243,6 @@ int verificaSe(const TokenNode *tk) {
   return 1; // passou por tudo
 }
 
-int ehMarcador(const char *token) {
-  for (int i = 0; i < sizeof(marcadores) / sizeof(marcadores[0]); i++)
-    if (strcmp(token, marcadores[i]) == 0)
-      return 1;
-  return 0;
-}
-
 // Função que retorna o nome base da variável (antes do '[')
 char *getNomeBase(const char *token) {
   int len = 0;
@@ -408,111 +267,6 @@ char *getNomeBase(const char *token) {
 }
 
 // Simbolo *buscaFuncaoNaTabelaDeSimbolos(Simbolo *tabela, const char *nome) {}
-
-Simbolo *buscarSimbolo(Simbolo *tabela, const char *nome, const char *funcao) {
-  Simbolo *atual = tabela_simbolos;
-  char nomeBase[50];
-  while (atual != NULL) {
-    // pega só o nome da várivel sem o tamanho do array para decimal
-    if (strcmp(atual->tipo, "decimal") == 0 ||
-        strcmp(atual->tipo, "texto") == 0) {
-      strcpy(nomeBase, getNomeBase(atual->nome));
-    }
-    // pego o nome normal
-    if (strcmp(atual->tipo, "decimal") != 0 &&
-        strcmp(atual->tipo, "texto") != 0) {
-      strcpy(nomeBase, getNomeBase(atual->nome));
-    }
-    // printf("Nome base: %s  - nome passado %s\n", nomeBase,
-    // getNomeBase(nome)); printf("Escopo tabela: %s  - escopo passado %s\n",
-    // atual->escopo, funcao);
-    if (strcmp(nomeBase, getNomeBase(nome)) == 0 &&
-        strcmp(atual->escopo, funcao) == 0) {
-      // printf("IGUALLL \n");
-      return atual; // Encontrou
-    }
-    atual = atual->prox;
-  }
-  return NULL; // Não existe
-}
-
-// Funções da tabela de símbolos
-Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
-                          const char *valor, const char *funcao) {
-  // Verifica se já existe
-  // printf("Adicionando '%s' '%s' '%s' '%s'\n", tipo, nome, valor, funcao);
-  Simbolo *existe = buscarSimbolo(inicio, nome, funcao);
-  // printf("Existe '%s' '%s' '%s' '%s'\n", tipo, nome, valor, funcao);
-  if (existe != NULL) {
-    if (strlen(tipo) > 0) {
-      // Tentando redeclarar -> ERRO
-      printf(
-          "-={********************************************************}=-\n");
-      printf("ERRO SEMÂNTICO:: Variável '%s' já declarada no escopo '%s'.\n",
-             nome, funcao);
-      printf(
-          "-={********************************************************}=-\n");
-      exit(1);
-    }
-    return existe;
-  }
-
-  Simbolo *novo = (Simbolo *)malloc(sizeof(Simbolo));
-  if (!novo) {
-    printf("-={********************************************************}=-\n");
-    printf("Memória insuficiente!\n");
-    printf("-={********************************************************}=-\n");
-    exit(1);
-  }
-  strcpy(novo->tipo, tipo);
-  strcpy(novo->nome, nome);
-  strcpy(novo->valor, valor);
-  strcpy(novo->escopo, funcao);
-  novo->prox = NULL;
-
-  if (!inicio)
-    return novo;
-
-  Simbolo *temp = inicio;
-  while (temp->prox)
-    temp = temp->prox;
-  temp->prox = novo;
-  return inicio;
-}
-void imprimirTabela(Simbolo *inicio) {
-  printf("\n%-10s %-15s %-15s %-20s\n", "Tipo", "Nome", "Valor", "Função");
-  printf("-------------------------------------------------------------\n");
-  while (inicio) {
-    printf("%-10s %-15s %-15s %-20s\n", inicio->tipo, inicio->nome,
-           inicio->valor, inicio->escopo);
-    inicio = inicio->prox;
-  }
-}
-// Atribuir valor a variavel
-Simbolo *atribuirValor(Simbolo *inicio, const char *nome, const char *valor,
-                       const char *funcao) {
-  // Verifica se já existe
-  // imprimirTabela(tabela_simbolos);
-  // printf("Atribuindo '%s' '%s' '%s'\n", nome, valor, funcao);
-  Simbolo *existe = buscarSimbolo(inicio, nome, funcao);
-
-  if (existe != NULL) {
-    // Verificar se o tipo do valor é compativel com o tipo da variavel
-
-    // Apenas atribuindo valor -> atualiza
-    strcpy(existe->valor, valor);
-    // printf("Variável '%s' atualizada para valor '%s'.\n", nome, valor);
-
-    return existe;
-  } else {
-    printf("-={********************************************************}=-\n");
-    printf("Variável '%s' - Impossivél atribuir valor '%s' a uma variavél  não "
-           "declarada.\n",
-           nome, valor);
-    printf("-={********************************************************}=-\n");
-    exit(1);
-  }
-}
 
 // Lista encadeada de tokens
 void addTokenToList(const char *token, int linha) {
@@ -658,19 +412,52 @@ void freeTokenList(TokenNode *head) {
 }
 
 // Função de processamento de declaração
+// Função para verificar se a string é um número inteiro
+bool ehInteiro(const char *str) {
+  if (str[0] == '\0')
+    return false; // string vazia não é número
+
+  for (int i = 0; str[i] != '\0'; i++) {
+    if (!isdigit(str[i]))
+      return false; // se tiver caractere que não é dígito
+  }
+
+  return true;
+}
+
+// Função para verificar se a string é um número decimal (com ponto)
+bool ehDecimal(const char *str) {
+  if (str[0] == '\0')
+    return false; // string vazia não é número
+
+  int ponto = 0;
+
+  for (int i = 0; str[i] != '\0'; i++) {
+    if (str[i] == '.') {
+      ponto++;
+      if (ponto > 1)
+        return false; // mais de um ponto, não é decimal válido
+    } else if (!isdigit(str[i])) {
+      return false; // caractere inválido
+    }
+  }
+
+  // Para ser decimal, deve ter **exatamente um ponto** e pelo menos um dígito
+  return (ponto == 1);
+}
+// Função de processamento de declaração
 int processarDeclaracao(TokenNode *token, char *tipo_atual,
                         char *escopo_atual) {
-
-  printf("nome processado = %s\n", token->token);
+  // printf("nome processado = %s\n", token->token);
   if (!token || !token->prox)
     return 0;
-
   if (ehFuncao(token->token)) {
-    strcpy(nome_atual, token->token);
     strcpy(valor_atual, "");
-    tabela_simbolos = adicionarSimbolo(tabela_simbolos, tipo_atual, nome_atual,
-                                       valor_atual, escopo_atual);
-  } else if (ehVariavel(token->prox->token)) {
+    strcpy(nome_atual, token->token);
+    return 1;
+  }
+  // Pega o nome da variável (token seguinte ao tipo)
+  if (ehVariavel(token->prox->token)) {
     strcpy(nome_atual, token->prox->token);
     // printf("nome atual = %s\n", nome_atual);
   } else {
@@ -679,37 +466,53 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual,
 
   TokenNode *atual = token->prox->prox;
 
-  // Verifica se é um array (ex: car[2.5])
-  if (atual && ehMarcador(atual->token) && strcmp(atual->token, "[") == 0) {
-    strcat(nome_atual, "[");
-    atual = atual->prox;
-
-    // pega o que está entre os colchetes
-    if (ehNumero(atual->token)) {
-      strcat(nome_atual, atual->token);
+  if (strcmp(token->token, "decimal") == 0 ||
+      strcmp(token->token, "texto") == 0) {
+    // Verifica se é um array com tamanho(ex: car[2.5])
+    // printf("Atual = %s\n", atual->token);
+    if (atual && ehMarcador(atual->token) && strcmp(atual->token, "[") == 0) {
+      strcat(nome_atual, "[");
       atual = atual->prox;
-      if (atual && ehMarcador(atual->token) && strcmp(atual->token, "]") == 0) {
-        strcat(nome_atual, "]");
+      if ((strcmp(token->token, "decimal") == 0 &&
+           ehDecimal(atual->token) == false) ||
+          (strcmp(token->token, "texto") == 0 &&
+           ehInteiro(atual->token) == false)) {
+        printf(
+            "-={********************************************************}=-\n");
+        printf("Alerta Semântico: variavél sem tamanho correto declarado - "
+               "LINHA %d\n",
+               atual->linha);
+        printf(
+            "-={********************************************************}=-\n");
       }
-      atual = atual->prox;
+
+      // pega o que está entre os colchetes
+      if (ehNumero(atual->token)) {
+        strcat(nome_atual, atual->token);
+        atual = atual->prox;
+        if (atual && ehMarcador(atual->token) &&
+            strcmp(atual->token, "]") == 0) {
+          strcat(nome_atual, "]");
+        }
+        atual = atual->prox;
+      } else { // se não tem nada entre os colchetes, erro
+        printf(
+            "-={********************************************************}=-\n");
+        printf("Alerta Semântico: variavél declara sem tamanho -  '%s' não é "
+               "um número - LINHA %d\n",
+               atual->token, atual->linha);
+        printf(
+            "-={********************************************************}=-\n");
+      }
     } else {
       printf(
           "-={********************************************************}=-\n");
-      printf("ERRO: Array '%s' não é um número - LINHA %d\n", atual->token,
+      printf("Alerta Semântico: variavél sem tamanho correto declarado - LINHA "
+             "%d\n",
              atual->linha);
-      exit(1);
+      printf(
+          "-={********************************************************}=-\n");
     }
-
-    /*
-    while (atual && strcmp(atual->token, "]") != 0) {
-      strcat(nome_atual, atual->token);
-      atual = atual->prox;
-    }
-
-    if (atual && strcmp(atual->token, "]") == 0 && atual) {
-      strcat(nome_atual, "]");
-      atual = atual->prox; // Avança além do colchete
-    }*/
   }
 
   // Verifica se há um operador "=" após o nome
@@ -911,7 +714,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
 
     if (ehPalavraReservada(token)) {
       if (strcmp(token, "principal") == 0) {
-        if (pricipalExiste) {
+        if (principalExiste) {
           printf("-={********************************************************}="
                  "-\n");
           printf("ERRO: Função 'principal' já declarada - LINHA %d\n",
@@ -920,7 +723,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
                  "-\n");
           return 0;
         } else {
-          pricipalExiste = true;
+          principalExiste = true;
           strcpy(escopo_atual, "principal");
         }
       } else if (strcmp(token, "se") == 0 || strcmp(token, "senao") == 0 ||
@@ -955,6 +758,8 @@ int VerificaSintaxeEhValida(TokenNode *head) {
     } else if (ehFuncao(token)) {
       strcpy(tipo_atual, "funcao");
       processarDeclaracao(current, tipo_atual, escopo_atual);
+      adicionarSimbolo(tabela_simbolos, tipo_atual, nome_atual, valor_atual,
+                       escopo_atual);
       strcpy(escopo_atual, token);
     } else if (ehVariavel(token)) {
       // se o proximo token for um operador de atribuição , eu pego o valor e
@@ -1009,6 +814,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
        }*/
 
     } else if (ehMarcador(token) && strcmp(token, "}") == 0) {
+
       if (flag_escopo_palavra_reservada < 0) {
         strcpy(escopo_atual, "global");
         // adicionar funcao na tabela de simboloss
@@ -1029,6 +835,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
 
     } else if (ehNumero(token) || ehString(token) || ehMarcador(token)) {
     } else {
+      printf("Entrei aqui aaaaaaaaaa");
       printf(
           "-={********************************************************}=-\n");
       printf("ERRO: Sintaxe invalida ('%s') - LINHA %d\n", token,
@@ -1148,7 +955,7 @@ int VerificaSeTemPontoVirgulaNoFimdaLinha(TokenNode *token_list) {
 // Main
 int main() {
   int numTokens;
-  TokenNode *resultado = tokenizeFile("Codigo1.txt", &numTokens);
+  TokenNode *resultado = tokenizeFile("Arquivos/Codigo1.txt", &numTokens);
   if (VerificaSeTemPontoVirgulaNoFimdaLinha(resultado) == 0) {
     if (verificarBalanceamento(resultado)) {
       if (VerificaSintaxeEhValida(resultado)) {

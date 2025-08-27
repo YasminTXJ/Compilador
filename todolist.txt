@@ -41,14 +41,15 @@ Semântica:
   • Pode escrever texto (entre ""). -OK
   • Se misturar → precisa de vírgula entre eles -OK
   • Não pode haver declaração dentro do escreva -OK
+- texto → deve ter [tamanho]. - OK
+- decimal → deve ter [antes.depois]. -OK
 
 - Verificar compatibilidade de tipos:
         ◦ inteiro ← inteiro 
         ◦ decimal ← inteiro ou decimal 
         ◦ texto ← só strings entre "" 
 - Variável só pode receber valor dentro do escopo válido - Acho que já é verificado pois quando ve se existe ela compara o escopo
-- texto → deve ter [tamanho].
-- decimal → deve ter [antes.depois].
+
 - Funções também entram na tabela (com tipo de retorno e parâmetros)
 - Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. 
 - Expressões matemática  Se mistura de tipos (inteiro + decimal) → permitido, mas emitir alerta.
@@ -100,7 +101,7 @@ Semântica:
 
 
 Alertas Semânticos (não interrompem execução)
-• Uso de variável sem declaração.
+• Uso de variável sem declaração. 
 • Uso de variável fora do escopo.
 • Atribuição com tipos diferentes.
 • Comparação entre tipos diferentes.
