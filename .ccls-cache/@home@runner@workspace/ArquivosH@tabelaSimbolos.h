@@ -21,8 +21,10 @@ extern Simbolo *tabela_simbolos;
 Simbolo *buscarSimbolo(Simbolo *tabela, const char *nome, const char *funcao);
 Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
                           const char *valor, const char *funcao);
-Simbolo *atribuirValor(Simbolo *inicio, const char *nome, const char *valor,
-                       const char *funcao);
+
+
+Simbolo *atribuirValor(Simbolo *inicio, const char *nome, char *valor,
+                       const char *funcao,int linha);
 void imprimirTabela(Simbolo *inicio);
 
 #endif

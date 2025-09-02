@@ -28,6 +28,8 @@ int ehVariavel(const char *token);
 int ehNumero(const char *token);
 int ehOperador(const TokenNode *token);
 int ehMarcador(const char *token);
+bool ehInteiro(const char *str);
+bool ehDecimal(const char *str);
 
 int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual);
 

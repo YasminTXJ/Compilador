@@ -881,7 +881,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
           tmp = tmp->prox;
         }
 
-        atribuirValor(tabela_simbolos, nome_atual, valor_atual, escopo_atual);
+        atribuirValor(tabela_simbolos, nome_atual, valor_atual, escopo_atual,tmp->linha);
       } else if (current->prox && ehMarcador(current->prox->token) &&
                  strcmp(current->prox->token, "[") == 0 &&
                  strcmp(current->prox->prox->prox->prox->token, "=") == 0) {
@@ -903,7 +903,7 @@ int VerificaSintaxeEhValida(TokenNode *head) {
         }
 
         // imprimirTabela(tabela_simbolos);
-        atribuirValor(tabela_simbolos, nome_atual, valor_atual, escopo_atual);
+        atribuirValor(tabela_simbolos, nome_atual, valor_atual, escopo_atual,tmpAtribuiValor->linha);
       } /*
        //verifica se a variavel existe na tabela de simbolos
        if (buscarSimbolo(tabela_simbolos, token, escopo_atual) == NULL){

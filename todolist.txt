@@ -45,12 +45,12 @@ Semântica:
 - decimal → deve ter [antes.depois]. -OK
 
 - Verificar compatibilidade de tipos:
-        ◦ inteiro ← inteiro 
-        ◦ decimal ← inteiro ou decimal 
-        ◦ texto ← só strings entre "" 
+        ◦ inteiro ← inteiro  - OK
+        ◦ decimal ← inteiro ou decimal  - OK
+        ◦ texto ← só strings entre ""  - OK
 - Variável só pode receber valor dentro do escopo válido - Acho que já é verificado pois quando ve se existe ela compara o escopo
 
-- Funções também entram na tabela (com tipo de retorno e parâmetros)
+- Funções também entram na tabela (com tipo de retorno e parâmetros) 
 - Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. 
 - Expressões matemática  Se mistura de tipos (inteiro + decimal) → permitido, mas emitir alerta.
 
