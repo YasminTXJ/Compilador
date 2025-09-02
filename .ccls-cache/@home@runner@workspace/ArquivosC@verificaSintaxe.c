@@ -486,6 +486,102 @@ TokenNode *verificaFuncao(TokenNode *current) {
   return proximo;
 }
 
+int ehOperadorRelacional(const char *token) {
+  return (
+      strcmp(token, "==") == 0 ||
+      strcmp(token, "<>") == 0 ||
+      strcmp(token, "<")  == 0 ||
+      strcmp(token, "<=") == 0 ||
+      strcmp(token, ">")  == 0 ||
+      strcmp(token, ">=") == 0
+  );
+}
+
+void verificaExpressoesRelacionais(TokenNode *token) {
+  TokenNode *atual = token;
+
+  char tipo_esq[20] = "";
+  char tipo_dir[20] = "";
+  char operador[5] = "";
+
+  // Pega tipo do lado esquerdo
+  if (ehInteiro(atual->token)) {
+      strcpy(tipo_esq, "inteiro");
+  } else if (ehDecimal(atual->token)) {
+      strcpy(tipo_esq, "decimal");
+  } else if (ehString(atual->token)) {
+      strcpy(tipo_esq, "texto");
+  } else if (ehVariavel(atual->token)) {
+      Simbolo *sim = buscarSimbolo(tabela_simbolos, atual->token, escopo_atual);
+      if (sim != NULL) {
+          strcpy(tipo_esq, sim->tipo);
+      } else {
+        printf("-={********************************************************}="
+           "-\n");
+          printf("Erro Semântico: Variável '%s' não declarada (linha %d)\n", atual->token, atual->linha);
+        printf("-={********************************************************}="
+           "-\n");
+          return;
+      }
+  }
+
+  // Operador relacional (ex: ==, <>, <, <=, >, >=)
+  if (ehOperadorRelacional(atual->prox->token)) {
+      strcpy(operador, atual->prox->token);
+  } else {
+      return; // não é expressão relacional
+  }
+
+  // Pega tipo do lado direito
+  TokenNode *dir = atual->prox->prox;
+  if (ehInteiro(dir->token)) {
+      strcpy(tipo_dir, "inteiro");
+  } else if (ehDecimal(dir->token)) {
+      strcpy(tipo_dir, "decimal");
+  } else if (ehString(dir->token)) {
+      strcpy(tipo_dir, "texto");
+  } else if (ehVariavel(dir->token)) {
+      Simbolo *sim = buscarSimbolo(tabela_simbolos, dir->token, escopo_atual);
+      if (sim != NULL) {
+          strcpy(tipo_dir, sim->tipo);
+      } else {
+        printf("-={********************************************************}="
+           "-\n");
+          printf("Erro Semântico: Variável '%s' não declarada (linha %d)\n", dir->token, dir->linha);
+        printf("-={********************************************************}="
+           "-\n");
+          return;
+      }
+  }
+
+  // =========================
+  // Regras de verificação
+  // =========================
+
+  // 1) Texto só pode usar == ou <>
+  if (strcmp(tipo_esq, "texto") == 0 || strcmp(tipo_dir, "texto") == 0) {
+      if (!(strcmp(operador, "==") == 0 || strcmp(operador, "<>") == 0)) {
+        printf("-={********************************************************}="
+           "-\n");
+          printf("Alerta semântico (linha %d): Texto só pode usar '==' ou '<>'.\n", atual->linha);
+        printf("-={********************************************************}="
+           "-\n");
+          return;
+      }
+  }
+
+  // 2) Inteiro e decimal podem usar todos
+  // (já está permitido, nada a restringir)
+
+  // 3) Comparação entre tipos diferentes → alerta
+  if (strcmp(tipo_esq, tipo_dir) != 0) {
+      printf("-={********************************************************}=-\n");
+      printf("Alerta semântico (linha %d): Comparação entre tipos diferentes (%s vs %s).\n",
+             atual->linha, tipo_esq, tipo_dir);
+      printf("-={********************************************************}=-\n");
+  }
+}
+
 TokenNode *verificaParDeExpressaoPara(TokenNode *tk) {
   TokenNode *expr = tk;
   if (!expr) {
@@ -568,8 +664,12 @@ TokenNode *verificaPara(TokenNode *tk) {
   // -------- X1: inicialização --------
   // verifica se já foi declarado
   if (buscarSimbolo(tabela_simbolos, expr->token, escopo_atual) == NULL) {
+    printf("-={********************************************************}="
+       "-\n");
     printf("ERRO SEMÂNTICO: variável '%s' não declarada no 'para' - LINHA %d\n",
            expr->token, expr->linha);
+    printf("-={********************************************************}="
+       "-\n");
     exit(1);
   }
 
@@ -578,8 +678,12 @@ TokenNode *verificaPara(TokenNode *tk) {
     while (expr && strcmp(expr->token, ";") != 0) {
       if (!ehVariavel(expr->token) && strcmp(expr->token, "=") != 0 &&
           !ehNumero(expr->token) && strcmp(expr->token, ",") != 0) {
+        printf("-={********************************************************}="
+           "-\n");
         printf("ERRO SINTÁTICO: inicialização inválida em 'para' - LINHA %d\n",
                expr->linha);
+        printf("-={********************************************************}="
+           "-\n");
         exit(1);
       }
       expr = expr->prox;
@@ -588,9 +692,13 @@ TokenNode *verificaPara(TokenNode *tk) {
   // printf("Token que deveria ser ; = %s - Linha: %d\n", expr->token,
   // expr->linha);
   if (!expr || strcmp(expr->token, ";") != 0) {
+    printf("-={********************************************************}="
+       "-\n");
     printf("ERRO SINTÁTICO: esperado ';' após inicialização no 'para' - LINHA "
            "%d\n",
            expr ? expr->linha : tk->linha);
+    printf("-={********************************************************}="
+       "-\n");
     exit(1);
   }
   expr = expr->prox;
@@ -599,14 +707,30 @@ TokenNode *verificaPara(TokenNode *tk) {
   // verifica se já foi declarado
   if (ehVariavel(expr->token)) {
     if (buscarSimbolo(tabela_simbolos, expr->token, escopo_atual) == NULL) {
+      printf("-={********************************************************}="
+         "-\n");
       printf(
           "ERRO SEMÂNTICO: variável '%s' não declarada no 'para' - LINHA %d\n",
           expr->token, expr->linha);
+      printf("-={********************************************************}="
+         "-\n");
       exit(1);
+    }if(ehOperadorRelacional(expr->prox->token)){
+      verificaExpressoesRelacionais(expr);
+    }else{
+      printf("-={********************************************************}="
+         "-\n");
+      printf("ERRO SINTÁTICO: condição inválida no 'para' - LINHA %d\n", expr->linha);
+      printf("-={********************************************************}="
+         "-\n");
     }
   } else {
+    printf("-={********************************************************}="
+       "-\n");
     printf("ERRO SINTÁTICO: condição vazia no 'para' - LINHA %d\n",
            expr->linha);
+    printf("-={********************************************************}="
+       "-\n");
     exit(1);
   }
 
@@ -619,8 +743,12 @@ TokenNode *verificaPara(TokenNode *tk) {
   }
   expr = expr->prox;
   if (!expr || strcmp(expr->token, ";") != 0) {
+    printf("-={********************************************************}="
+       "-\n");
     printf("ERRO SINTÁTICO: esperado ';' após condição no 'para' - LINHA %d\n",
            expr ? expr->linha : tk->linha);
+    printf("-={********************************************************}="
+       "-\n");
     exit(1);
   }
   expr = expr->prox;
@@ -634,15 +762,23 @@ TokenNode *verificaPara(TokenNode *tk) {
       if (!(ehVariavel(expr->token) || ehNumero(expr->token) ||
             strcmp(expr->token, "+") == 0 || strcmp(expr->token, "-") == 0 ||
             ehOperador(expr))) {
+        printf("-={********************************************************}="
+           "-\n");
         printf("ERRO SINTÁTICO: incremento inválido em 'para' - LINHA %d\n",
                expr->linha);
+        printf("-={********************************************************}="
+           "-\n");
         exit(1);
       }
       if (ehVariavel(expr->token)) {
         if (buscarSimbolo(tabela_simbolos, expr->token, escopo_atual) == NULL) {
+          printf("-={********************************************************}="
+             "-\n");
           printf("ERRO SEMÂNTICO: variável '%s' não declarada no 'para' - "
                  "LINHA %d\n",
                  expr->token, expr->linha);
+          printf("-={********************************************************}="
+             "-\n");
           exit(1);
         }
       }
@@ -688,8 +824,12 @@ TokenNode *verificaPara(TokenNode *tk) {
       cur = cur->prox;
     }
     if (!cur) {
+      printf("-={********************************************************}="
+         "-\n");
       printf("ERRO SINTÁTICO: bloco do 'para' não fechado com '}' - LINHA %d\n",
              expr->linha);
+      printf("-={********************************************************}="
+         "-\n");
       exit(1);
     }
   }
@@ -1003,6 +1143,9 @@ int VerificaSintaxeEhValida(TokenNode *head) {
       }else if(current->prox && ehOperadorMatematico(current->prox->token)){// se o proximo token for um operador matematico 
        // printf("Entrando na verificação de expressões matemáticas\n");
             verificaExpressoesMatematicas(current);
+      }else if(current->prox && ehOperadorRelacional(current->prox->token)){
+            //printf("Entrando na verificação de expressões relacionais\n");
+            verificaExpressoesRelacionais(current);
       }
 
     } else if (ehMarcador(token) && strcmp(token, "}") == 0) {
@@ -1023,8 +1166,12 @@ int VerificaSintaxeEhValida(TokenNode *head) {
 
     }else if(ehNumero(token)){
       if(current->prox && ehOperadorMatematico(current->prox->token)){// se o proximo token for um operador matematico 
-        printf("Entrando na verificação de expressões matemáticas\n");
+        //("Entrando na verificação de expressões matemáticas\n");
             verificaExpressoesMatematicas(current);
+      }
+      else if(current->prox && ehOperadorRelacional(current->prox->token)){
+            //printf("Entrando na verificação de expressões relacionais\n");
+            verificaExpressoesRelacionais(current);
       }
     } else if ( ehString(token) || ehMarcador(token)) {
     } else {

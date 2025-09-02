@@ -37,4 +37,7 @@ int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual);
 int VerificaSintaxeEhValida(TokenNode *head);
 void verificaExpressoesMatematicas(TokenNode *token);
 
+void verificaExpressoesRelacionais(TokenNode *token);
+int ehOperadorRelacional(const char *token);
+
 #endif // VERIFICASINTAXE_H

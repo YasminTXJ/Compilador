@@ -49,16 +49,17 @@ Semântica:
         ◦ decimal ← inteiro ou decimal  - OK
         ◦ texto ← só strings entre ""  - OK
 - Variável só pode receber valor dentro do escopo válido - OK
+- Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. - OK 
+- Expressões matemática  Se mistura de tipos (inteiro + decimal) → permitido, mas emitir alerta. - OK
 
 - Funções também entram na tabela (com tipo de retorno e parâmetros) 
-- Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. 
-- Expressões matemática  Se mistura de tipos (inteiro + decimal) → permitido, mas emitir alerta.
+
 
 - Expressões Relacionais
-    • Comparações só podem ocorrer com variáveis ou valores compatíveis.
-    • texto só pode usar == ou <>.
-    • inteiro e decimal podem usar todos (<, <=, >, >=, ==, <>).
-    • Comparação entre tipos diferentes → alerta semântico.
+    • Comparações só podem ocorrer com variáveis ou valores compatíveis. - OK
+    • texto só pode usar == ou <>. - OK
+    • inteiro e decimal podem usar todos (<, <=, >, >=, ==, <>). - OK
+    • Comparação entre tipos diferentes → alerta semântico. - OK
   
 - Operadores Lógicos
     • && e || só podem juntar expressões relacionais.
