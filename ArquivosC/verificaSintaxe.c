@@ -646,6 +646,11 @@ TokenNode *verificaPara(TokenNode *tk) {
           exit(1);
         }
       }
+      // se for numero ou variavel e o proximo for operador
+      if ((ehNumero(expr->token) || ehVariavel(expr->token)) &&
+          ehOperadorMatematico(expr->prox->token)){
+          verificaExpressoesMatematicas(expr);
+       }
       expr = expr->prox;
     }
   } else {
@@ -689,6 +694,97 @@ TokenNode *verificaPara(TokenNode *tk) {
     }
   }
   return tokenAposPara; // passou em tudo
+}
+
+bool ehOperadorMatematico(const char *token){
+  if (strcmp(token, "+") == 0 || strcmp(token, "-") == 0 || strcmp(token, "*") == 0 || strcmp(token, "/") == 0 || strcmp(token, "^") == 0){
+    return true;
+  }
+  return false;
+}
+
+void verificaExpressoesMatematicas(TokenNode *token){
+  //se o token for um operador matematico "+" , "-",  "*",  "/",  "^",
+  //token atual
+  TokenNode *atual = token;
+  //tipo de dado inicial
+  char tipo_atual[20] = "";
+
+  //enquanto o token não for um marcador e for diferente de "==", "<>", "<=", ">=", "&&", "||", "<",  ">",  "="
+  // se o dado atual for um inteiro, decimal ou variavel desse tipo, o proximo token for um operador matematico, e o proximo token for um inteiro, decimal ou variavel desse tipo, o tipo_atual é o tipo do token atual
+  if (ehInteiro(atual->token) || ehDecimal(atual->token)){
+    if(ehInteiro(atual->token)){
+      strcpy(tipo_atual, "inteiro");
+    }
+    if(ehDecimal(atual->token)){
+      strcpy(tipo_atual, "decimal");
+    }
+  }else if(ehVariavel(atual->token)==1){
+      //pego o tipo da variavel
+    //printf("VARIAVEL  -%s--------------------------------\n",atual->token);
+      Simbolo *sim = buscarSimbolo(tabela_simbolos, atual->token, escopo_atual);
+    if (sim != NULL){
+       strcpy(tipo_atual, sim->tipo);
+    }else{
+      printf("não achei a variavel  \n");
+    }
+  }else if(ehString(token->prox->prox->token)==1){
+   // printf("Stirng %s -----------------------------\n ",token->prox->prox->token);
+    //emite alerta
+    printf("-={********************************************************}="
+               "-\n");
+      printf("Alerta Semântico: Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. - LINHA %d\n", token->linha);
+    printf("-={********************************************************}=");
+  }
+  if(ehOperadorMatematico(token->prox->token) && (ehInteiro(token->prox->prox->token) || ehDecimal(token->prox->prox->token) || ehVariavel(token->prox->prox->token))){
+      //se for decimal e o tipo atual for inteiro, emitir alerta
+   // printf("Entreiii na verificação - proximo token: %s  - proximo proximo token: %s\n", token->prox->token, token->prox->prox->token);
+      if((ehDecimal(token->prox->prox->token) && strcmp(tipo_atual, "inteiro") == 0) ||
+        (ehInteiro(token->prox->prox->token) && strcmp(tipo_atual, "decimal") == 0)){
+        //emite alerta
+        printf("-={********************************************************}="
+               "-\n");
+          printf("Alerta Semântico: Mistura de tipos (inteiro + decimal) - LINHA %d\n", token->linha);
+        printf("-={********************************************************}=");
+        }
+      //se for variavel, pego o tipo dela
+      if(ehVariavel(token->prox->prox->token)==1){
+        //pego o tipo da variavel
+        Simbolo *sim = buscarSimbolo(tabela_simbolos, token->prox->prox->token, escopo_atual);
+        if (sim != NULL){
+            if(strcmp(tipo_atual,sim->tipo)==1 && strcmp(sim->tipo, "texto")==1){
+                //emite alerta
+                printf("-={********************************************************}="
+               "-\n");
+                  printf("Alerta Semântico: Mistura de tipos (inteiro + decimal) - LINHA %d\n", token->linha);  
+                printf("-={********************************************************}=");
+            }else if(strcmp(sim->tipo, "texto")==0){
+              //emite alterta
+              //printf("Tipo atual: %s  - Tipo da variavel: %s\n", tipo_atual, sim->tipo);
+              printf("-={********************************************************}="
+               "-\n");
+                  printf("Alerta Semântico: Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. - LINHA %d\n", token->linha);
+                printf("-={********************************************************}=");
+
+            }
+
+        }else{
+          printf("não achei a variavel  \n");
+        }
+
+
+      }
+      //se for string emite alerta
+      if(ehString(token->prox->prox->token)==1){
+        //emite alerta
+        printf("-={********************************************************}="
+               "-\n");
+          printf("Alerta Semântico: Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. - LINHA %d\n", token->linha);
+        printf("-={********************************************************}=");
+      }
+  }
+
+
 }
 
 //     ---------------------------------
@@ -904,17 +1000,10 @@ int VerificaSintaxeEhValida(TokenNode *head) {
 
         // imprimirTabela(tabela_simbolos);
         atribuirValor(tabela_simbolos, nome_atual, valor_atual, escopo_atual,tmpAtribuiValor->linha);
-      } /*
-       //verifica se a variavel existe na tabela de simbolos
-       if (buscarSimbolo(tabela_simbolos, token, escopo_atual) == NULL){
-          printf("-={********************************************************}="
-                  "-\n");
-           printf("ERRO Semântico: Variável '%s' não declarada - LINHA %d\n",
-       token, current->linha);
-         printf("-={********************************************************}="
-                  "-\n");
-         exit(1);
-       }*/
+      }else if(current->prox && ehOperadorMatematico(current->prox->token)){// se o proximo token for um operador matematico 
+       // printf("Entrando na verificação de expressões matemáticas\n");
+            verificaExpressoesMatematicas(current);
+      }
 
     } else if (ehMarcador(token) && strcmp(token, "}") == 0) {
 
@@ -932,7 +1021,12 @@ int VerificaSintaxeEhValida(TokenNode *head) {
         exit(1);
       }
 
-    } else if (ehNumero(token) || ehString(token) || ehMarcador(token)) {
+    }else if(ehNumero(token)){
+      if(current->prox && ehOperadorMatematico(current->prox->token)){// se o proximo token for um operador matematico 
+        printf("Entrando na verificação de expressões matemáticas\n");
+            verificaExpressoesMatematicas(current);
+      }
+    } else if ( ehString(token) || ehMarcador(token)) {
     } else {
       imprimeMensagemErro("ERRO: Sintaxe invalida", current->token,
                           current->linha);

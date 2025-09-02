@@ -31,8 +31,10 @@ int ehMarcador(const char *token);
 bool ehInteiro(const char *str);
 bool ehDecimal(const char *str);
 
+bool ehOperadorMatematico(const char *token);
 int processarDeclaracao(TokenNode *token, char *tipo_atual, char *escopo_atual);
 
 int VerificaSintaxeEhValida(TokenNode *head);
+void verificaExpressoesMatematicas(TokenNode *token);
 
 #endif // VERIFICASINTAXE_H

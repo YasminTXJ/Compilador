@@ -48,7 +48,7 @@ Semântica:
         ◦ inteiro ← inteiro  - OK
         ◦ decimal ← inteiro ou decimal  - OK
         ◦ texto ← só strings entre ""  - OK
-- Variável só pode receber valor dentro do escopo válido - Acho que já é verificado pois quando ve se existe ela compara o escopo
+- Variável só pode receber valor dentro do escopo válido - OK
 
 - Funções também entram na tabela (com tipo de retorno e parâmetros) 
 - Expressões matemática só podem ser feitas entre inteiros/decimais ,texto não pode participar. 

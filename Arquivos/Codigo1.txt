@@ -1,6 +1,7 @@
 principal()
 {
 inteiro !a , !b2 = 70000000;
+texto !casa[9] = "oi";
 inteiro !x = 5;
 decimal !cc[2.5];
 inteiro !d;
@@ -10,7 +11,7 @@ leia (!a, !a);
 se (!a <= !b2)
  escreva(" A é maior", !a);
  senao escreva("B é maior", !a);
- para (!d = 1; !d<=100; !d=!d+2){
+ para (!d = 1; !d<=100; !d = !d){
  escreva("D", !d);
   
  }
