@@ -18,9 +18,9 @@ se (!a <= !b2)
  !cc[2.5] = 1;
 }
 decimal !ff[5.5] = 2.5;
-funcao __printa {
+funcao __printa (inteiro !po, inteiro !pa) {
     texto !msg[5] = "Estou na funacao printa!";
-  
+
 }
 
 decimal !zzf[5.5];

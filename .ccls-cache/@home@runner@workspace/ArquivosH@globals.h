@@ -17,18 +17,11 @@
 
 // Estrutura da tabela de símbolos
 
-
 typedef struct TokenNode {
   char *token;
   int linha;
   struct TokenNode *prox;
 } TokenNode;
-
-// Declarações dos arrays globais (definidos no .c)
-extern const char *palavrasReservadas[];
-extern const char *tiposDeDados[];
-extern const char *operadores[];
-extern const char *marcadores[];
 
 // Variáveis globais (apenas declaração)
 extern size_t total_memory_used;
@@ -45,7 +38,6 @@ extern TokenNode *token_list;
 extern TokenNode *token_list_tail;
 extern int tokenCount;
 extern int flag_escopo_palavra_reservada;
-
 
 // Variável global (apenas declaração)
 extern bool principalExiste;

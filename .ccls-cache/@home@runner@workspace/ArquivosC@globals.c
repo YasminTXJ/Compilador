@@ -1,14 +1,6 @@
 #include "../ArquivosH/globals.h"
 
-const char *palavrasReservadas[] = {"principal", "funcao", "retorno", "leia",
-                                    "escreva",   "se",     "senao",   "para"};
 
-const char *tiposDeDados[] = {"inteiro", "texto", "decimal"};
-
-const char *operadores[] = {"==", "<>", "<=", ">=", "&&", "||", "+",
-                            "-",  "*",  "/",  "^",  "<",  ">",  "="};
-
-const char *marcadores[] = {"(", ")", "{", "}", "[", "]", ";", ",", " "};
 
 // Definição e inicialização
 size_t total_memory_used = 0;

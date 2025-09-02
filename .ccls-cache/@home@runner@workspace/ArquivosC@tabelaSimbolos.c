@@ -34,7 +34,8 @@ Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
     if (strlen(tipo) > 0) {
       printf(
           "-={********************************************************}=-\n");
-      printf("ERRO SEMÂNTICO:: Variável/funcao '%s' já declarada no escopo '%s'.\n",
+      printf("ERRO SEMÂNTICO:: Variável/funcao '%s' já declarada no escopo "
+             "'%s'.\n",
              nome, funcao);
       printf(
           "-={********************************************************}=-\n");
@@ -67,7 +68,7 @@ Simbolo *adicionarSimbolo(Simbolo *inicio, const char *tipo, const char *nome,
 }
 
 void imprimirTabela(Simbolo *inicio) {
-  printf("\n%-10s %-15s %-15s %-20s\n", "Tipo", "Nome", "Valor", "Função");
+  printf("\n%-10s %-15s %-15s %-30s\n", "Tipo", "Nome", "Valor", "Função");
   printf("-------------------------------------------------------------\n");
   while (inicio) {
     printf("%-10s %-15s %-15s %-20s\n", inicio->tipo, inicio->nome,
