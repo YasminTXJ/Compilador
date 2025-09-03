@@ -320,12 +320,71 @@ int VerificaSeTemPontoVirgulaNoFimdaLinha(TokenNode *token_list) {
 
   return 0;
 }
+
+int ehOperadorLogico(const char *token) {
+  return (
+      strcmp(token, "&&") == 0 ||
+      strcmp(token, "||") == 0
+  );
+}
+
+void verificaExpressoesLogicas(TokenNode *lista) {
+  TokenNode *atual = lista;
+
+  int achouRelacional = 0;
+
+  while (atual != NULL) {
+      // Se encontrar operador relacional
+      if (ehOperadorRelacional(atual->token)) {
+          achouRelacional = 1;
+      }
+
+      // Se encontrar operador lógico
+      else if (ehOperadorLogico(atual->token)) {
+          if (!achouRelacional) {
+              printf("-={********************************************************}=-\n");
+              printf("Alerta semântico (linha %d): Operador lógico '%s' usado sem expressão relacional à esquerda.\n",
+                     atual->linha, atual->token);
+              printf("-={********************************************************}=-\n");
+          }
+
+          // Agora percorre lado direito até marcador
+          int ladoDireitoTemRelacional = 0;
+          TokenNode *p = atual->prox;
+
+          while (p != NULL && !ehMarcador(p->token)) {
+              if (ehOperadorRelacional(p->token)) {
+                  ladoDireitoTemRelacional = 1;
+              }
+              p = p->prox;
+          }
+
+          if (!ladoDireitoTemRelacional) {
+              printf("-={********************************************************}=-\n");
+              printf("Alerta semântico (linha %d): Operador lógico '%s' usado sem expressão relacional à direita.\n",
+                     atual->linha, atual->token);
+              printf("-={********************************************************}=-\n");
+          }
+
+          // Depois do marcador, zera flag e recomeça
+          achouRelacional = 0;
+      }
+
+      // Se encontrar marcador, zera flag
+      else if (ehMarcador(atual->token)) {
+          achouRelacional = 0;
+      }
+
+      atual = atual->prox;
+  }
+}
 // Main
 int main() {
   int numTokens;
   TokenNode *resultado = tokenizeFile("Arquivos/Codigo1.txt", &numTokens);
   if (VerificaSeTemPontoVirgulaNoFimdaLinha(resultado) == 0) {
     if (verificarBalanceamento(resultado)) {
+      verificaExpressoesLogicas(resultado);
       if (VerificaSintaxeEhValida(resultado)) {
         printf(
             "-={********************************************************}=-\n");

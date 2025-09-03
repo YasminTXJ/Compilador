@@ -62,9 +62,9 @@ Semântica:
     • Comparação entre tipos diferentes → alerta semântico. - OK
   
 - Operadores Lógicos
-    • && e || só podem juntar expressões relacionais.
-    • Verificar se ambos lados são booleanos (resultados de comparações).
-    • Se usado sobre valores não relacionais → alerta.
+    • && e || só podem juntar expressões relacionais. - OK
+    • Verificar se ambos lados são booleanos (resultados de comparações). -OK
+    • Se usado sobre valores não relacionais → alerta. - OK
 
 - Comando se / senao
     • Condição precisa ser uma expressão relacional válida.

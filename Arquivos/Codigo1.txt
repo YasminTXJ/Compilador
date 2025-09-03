@@ -8,7 +8,7 @@ inteiro !d;
 !b2 = !a;
 escreva("Escreva um número",!x );
 leia (!a, !a);
-se (!a <= !b2)
+se (!a <= 9 )
  escreva(" A é maior", !a);
  senao escreva("B é maior", !a);
  para (!d = 1; !d<=100; !d = !d){
